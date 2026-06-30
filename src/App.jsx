@@ -1,122 +1,119 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState, useRef } from "react"
+import { supabase } from "./lib/supabase"
+import imageCompression from "browser-image-compression"
 
-function App() {
-  const [count, setCount] = useState(0)
+console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL)
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+const EVENT_ID = "testEvent"
+const PHOTO_LIMIT = 50
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+function getDeviceId() {
+  let id = localStorage.getItem("shoto_device_id")
+  if (!id) {
+    id = crypto.randomUUID()
+    localStorage.setItem("shoto_device_id", id)
+  }
+  return id
 }
 
-export default App
+export default function App() {
+  const [photos, setPhotos] = useState([])
+  const [uploading, setUploading] = useState(false)
+  const [shotCount, setShotCount] = useState(
+    parseInt(localStorage.getItem(`shoto_count_${EVENT_ID}`) || "0")
+  )
+  const inputRef = useRef(null)
+
+  const shotsLeft = PHOTO_LIMIT - shotCount
+
+  async function handleCapture(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    if (shotCount >= PHOTO_LIMIT) {
+      alert("You've used all your shots!")
+      return
+    }
+
+    setUploading(true)
+
+    try {
+      const compressed = await imageCompression(file, {
+        maxSizeMB: 0.3,
+        maxWidthOrHeight: 1920,
+      })
+
+      const deviceId = getDeviceId()
+      const path = `${EVENT_ID}/${Date.now()}.jpg`
+
+      const { error } = await supabase.storage
+        .from("photos")
+        .upload(path, compressed)
+
+      if (error) throw error
+
+      const { data: urlData } = supabase.storage
+        .from("photos")
+        .getPublicUrl(path)
+
+      const newCount = shotCount + 1
+      localStorage.setItem(`shoto_count_${EVENT_ID}`, newCount)
+      setShotCount(newCount)
+      setPhotos((prev) => [urlData.publicUrl, ...prev])
+    } catch (err) {
+      console.error(err)
+      alert("Something went wrong, try again.")
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <div style={{ maxWidth: 480, margin: "0 auto", padding: 20, fontFamily: "sans-serif" }}>
+      <h1 style={{ textAlign: "center" }}>shoto</h1>
+      <p style={{ textAlign: "center" }}>{shotsLeft} shots left</p>
+
+      <div style={{ textAlign: "center", margin: "20px 0" }}>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          style={{ display: "none" }}
+          onChange={handleCapture}
+        />
+        <button
+          onClick={() => inputRef.current.click()}
+          disabled={uploading || shotsLeft <= 0}
+          style={{
+            background: "#111",
+            color: "#fff",
+            border: "none",
+            borderRadius: 8,
+            padding: "14px 32px",
+            fontSize: 18,
+            cursor: "pointer",
+          }}
+        >
+          {uploading ? "Uploading..." : "Take Photo"}
+        </button>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        {photos.map((url, i) => (
+          <img
+            key={i}
+            src={url}
+            alt=""
+            style={{
+              width: "100%",
+              aspectRatio: "1",
+              objectFit: "cover",
+              borderRadius: 4,
+              filter: "sepia(0.4) contrast(1.1) brightness(0.95) saturate(0.85)",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
