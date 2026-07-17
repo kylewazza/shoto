@@ -93,7 +93,7 @@ export default function Dashboard() {
       <div style={{ marginBottom: 40 }}>
         <p style={{ color: "#aaa", marginBottom: 12 }}>Guest QR Code — print or share this</p>
         <div style={{ background: "#fff", display: "inline-block", padding: 16, borderRadius: 8 }}>
-          <QRCodeSVG value={`https://shoto.co.uk/?event=${eventId}`} size={180} />
+          <QRCodeSVG value={`https://shoto.co.uk/camera?event=${eventId}`} size={180} />
         </div>
         <p style={{ color: "#555", fontSize: 12, marginTop: 8 }}>shoto.co.uk/?event={eventId}</p>
       </div>

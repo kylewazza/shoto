@@ -15,7 +15,7 @@ export default function Create() {
     setEventId(id)
   }
 
-  const guestUrl = `https://shoto.co.uk/?event=${eventId}`
+  const guestUrl = `https://shoto.co.uk/camera?event=${eventId}`
   const dashboardUrl = `https://shoto.co.uk/dashboard?event=${eventId}`
 
   return (
