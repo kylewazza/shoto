@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react"
 import { supabase } from "./lib/supabase"
+import JSZip from "jszip"
+import { saveAs } from "file-saver"
 
 const EVENT_ID = "testEvent"
 
 export default function Dashboard() {
   const [photos, setPhotos] = useState([])
   const [loading, setLoading] = useState(true)
+  const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     loadPhotos()
@@ -26,11 +29,28 @@ export default function Dashboard() {
       const { data: urlData } = supabase.storage
         .from("photos")
         .getPublicUrl(`${EVENT_ID}/${file.name}`)
-      return urlData.publicUrl
+      return { url: urlData.publicUrl, name: file.name }
     })
 
     setPhotos(urls)
     setLoading(false)
+  }
+
+  async function downloadAll() {
+    setDownloading(true)
+    const zip = new JSZip()
+
+    await Promise.all(
+      photos.map(async ({ url, name }) => {
+        const response = await fetch(url)
+        const blob = await response.blob()
+        zip.file(name, blob)
+      })
+    )
+
+    const content = await zip.generateAsync({ type: "blob" })
+    saveAs(content, `shoto-${EVENT_ID}.zip`)
+    setDownloading(false)
   }
 
   return (
@@ -52,13 +72,30 @@ export default function Dashboard() {
         <p style={{ color: "#aaa" }}>No photos yet.</p>
       ) : (
         <>
-          <p style={{ color: "#aaa", marginBottom: 20 }}>{photos.length} photos taken</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 20 }}>
+            <p style={{ color: "#aaa", margin: 0 }}>{photos.length} photos taken</p>
+            <button
+              onClick={downloadAll}
+              disabled={downloading}
+              style={{
+                background: downloading ? "#333" : "#fff",
+                color: "#111",
+                border: "none",
+                borderRadius: 6,
+                padding: "8px 20px",
+                cursor: downloading ? "not-allowed" : "pointer",
+                fontWeight: "bold"
+              }}
+            >
+              {downloading ? "Preparing..." : "Download All"}
+            </button>
+          </div>
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
             gap: 8
           }}>
-            {photos.map((url, i) => (
+            {photos.map(({ url }, i) => (
               <img
                 key={i}
                 src={url}
