@@ -4,21 +4,26 @@ import JSZip from "jszip"
 import { saveAs } from "file-saver"
 import { QRCodeSVG } from "qrcode.react"
 
-const EVENT_ID = "testEvent"
+function getEventId() {
+  const params = new URLSearchParams(window.location.search)
+  return params.get("event")
+}
 
 export default function Dashboard() {
+  const eventId = getEventId()
   const [photos, setPhotos] = useState([])
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
-    loadPhotos()
+    if (eventId) loadPhotos()
+    else setLoading(false)
   }, [])
 
   async function loadPhotos() {
     const { data, error } = await supabase.storage
       .from("photos")
-      .list(EVENT_ID, { sortBy: { column: "created_at", order: "desc" } })
+      .list(eventId, { sortBy: { column: "created_at", order: "desc" } })
 
     if (error) {
       console.error(error)
@@ -29,7 +34,7 @@ export default function Dashboard() {
     const urls = data.map((file) => {
       const { data: urlData } = supabase.storage
         .from("photos")
-        .getPublicUrl(`${EVENT_ID}/${file.name}`)
+        .getPublicUrl(`${eventId}/${file.name}`)
       return { url: urlData.publicUrl, name: file.name }
     })
 
@@ -50,8 +55,26 @@ export default function Dashboard() {
     )
 
     const content = await zip.generateAsync({ type: "blob" })
-    saveAs(content, `shoto-${EVENT_ID}.zip`)
+    saveAs(content, `shoto-${eventId}.zip`)
     setDownloading(false)
+  }
+
+  if (!eventId) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "#111",
+        color: "#fff",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "sans-serif"
+      }}>
+        <h1 style={{ letterSpacing: 2 }}>shoto</h1>
+        <p style={{ color: "#aaa" }}>No event found.</p>
+      </div>
+    )
   }
 
   return (
@@ -70,9 +93,9 @@ export default function Dashboard() {
       <div style={{ marginBottom: 40 }}>
         <p style={{ color: "#aaa", marginBottom: 12 }}>Guest QR Code — print or share this</p>
         <div style={{ background: "#fff", display: "inline-block", padding: 16, borderRadius: 8 }}>
-          <QRCodeSVG value={`https://shoto.co.uk/?event=${EVENT_ID}`} size={180} />
+          <QRCodeSVG value={`https://shoto.co.uk/?event=${eventId}`} size={180} />
         </div>
-        <p style={{ color: "#555", fontSize: 12, marginTop: 8 }}>shoto.co.uk/?event={EVENT_ID}</p>
+        <p style={{ color: "#555", fontSize: 12, marginTop: 8 }}>shoto.co.uk/?event={eventId}</p>
       </div>
 
       {loading ? (

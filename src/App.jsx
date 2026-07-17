@@ -2,7 +2,6 @@ import { useState, useRef } from "react"
 import { supabase } from "./lib/supabase"
 import imageCompression from "browser-image-compression"
 
-const EVENT_ID = "testEvent"
 const PHOTO_LIMIT = 50
 
 function getDeviceId() {
@@ -14,14 +13,38 @@ function getDeviceId() {
   return id
 }
 
+function getEventId() {
+  const params = new URLSearchParams(window.location.search)
+  return params.get("event")
+}
+
 export default function App() {
+  const eventId = getEventId()
   const [uploading, setUploading] = useState(false)
   const [shotCount, setShotCount] = useState(
-    parseInt(localStorage.getItem(`shoto_count_${EVENT_ID}`) || "0")
+    parseInt(localStorage.getItem(`shoto_count_${eventId}`) || "0")
   )
   const inputRef = useRef(null)
 
   const shotsLeft = PHOTO_LIMIT - shotCount
+
+  if (!eventId) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "#111",
+        color: "#fff",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "sans-serif"
+      }}>
+        <h1 style={{ letterSpacing: 2 }}>shoto</h1>
+        <p style={{ color: "#aaa" }}>No event found. Please scan the QR code.</p>
+      </div>
+    )
+  }
 
   async function handleCapture(e) {
     const file = e.target.files[0]
@@ -40,7 +63,7 @@ export default function App() {
       })
 
       const deviceId = getDeviceId()
-      const path = `${EVENT_ID}/${deviceId}_${Date.now()}.jpg`
+      const path = `${eventId}/${deviceId}_${Date.now()}.jpg`
 
       const { error } = await supabase.storage
         .from("photos")
@@ -49,7 +72,7 @@ export default function App() {
       if (error) throw error
 
       const newCount = shotCount + 1
-      localStorage.setItem(`shoto_count_${EVENT_ID}`, newCount)
+      localStorage.setItem(`shoto_count_${eventId}`, newCount)
       setShotCount(newCount)
     } catch (err) {
       console.error(err)
@@ -72,7 +95,7 @@ export default function App() {
       padding: 20
     }}>
       <h1 style={{ fontSize: 32, marginBottom: 8, letterSpacing: 2 }}>shoto</h1>
-      
+
       {shotsLeft > 0 ? (
         <>
           <p style={{ color: "#aaa", marginBottom: 40 }}>
