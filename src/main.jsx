@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import App from "./App"
 import Dashboard from "./Dashboard"
+import Create from "./Create"
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -10,6 +11,7 @@ createRoot(document.getElementById("root")).render(
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/create" element={<Create />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>
