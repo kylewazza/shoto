@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { supabase } from "./lib/supabase"
 import JSZip from "jszip"
 import { saveAs } from "file-saver"
+import { QRCodeSVG } from "qrcode.react"
 
 const EVENT_ID = "testEvent"
 
@@ -65,6 +66,14 @@ export default function Dashboard() {
     }}>
       <h1 style={{ letterSpacing: 2, marginBottom: 4 }}>shoto</h1>
       <p style={{ color: "#aaa", marginBottom: 32 }}>Organiser Dashboard</p>
+
+      <div style={{ marginBottom: 40 }}>
+        <p style={{ color: "#aaa", marginBottom: 12 }}>Guest QR Code — print or share this</p>
+        <div style={{ background: "#fff", display: "inline-block", padding: 16, borderRadius: 8 }}>
+          <QRCodeSVG value={`https://shoto.co.uk/?event=${EVENT_ID}`} size={180} />
+        </div>
+        <p style={{ color: "#555", fontSize: 12, marginTop: 8 }}>shoto.co.uk/?event={EVENT_ID}</p>
+      </div>
 
       {loading ? (
         <p style={{ color: "#aaa" }}>Loading photos...</p>
