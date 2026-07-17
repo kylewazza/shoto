@@ -2,8 +2,6 @@ import { useState, useRef } from "react"
 import { supabase } from "./lib/supabase"
 import imageCompression from "browser-image-compression"
 
-console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL)
-
 const EVENT_ID = "testEvent"
 const PHOTO_LIMIT = 50
 
@@ -17,7 +15,6 @@ function getDeviceId() {
 }
 
 export default function App() {
-  const [photos, setPhotos] = useState([])
   const [uploading, setUploading] = useState(false)
   const [shotCount, setShotCount] = useState(
     parseInt(localStorage.getItem(`shoto_count_${EVENT_ID}`) || "0")
@@ -43,7 +40,7 @@ export default function App() {
       })
 
       const deviceId = getDeviceId()
-      const path = `${EVENT_ID}/${Date.now()}.jpg`
+      const path = `${EVENT_ID}/${deviceId}_${Date.now()}.jpg`
 
       const { error } = await supabase.storage
         .from("photos")
@@ -51,14 +48,9 @@ export default function App() {
 
       if (error) throw error
 
-      const { data: urlData } = supabase.storage
-        .from("photos")
-        .getPublicUrl(path)
-
       const newCount = shotCount + 1
       localStorage.setItem(`shoto_count_${EVENT_ID}`, newCount)
       setShotCount(newCount)
-      setPhotos((prev) => [urlData.publicUrl, ...prev])
     } catch (err) {
       console.error(err)
       alert("Something went wrong, try again.")
@@ -68,52 +60,57 @@ export default function App() {
   }
 
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", padding: 20, fontFamily: "sans-serif" }}>
-      <h1 style={{ textAlign: "center" }}>shoto</h1>
-      <p style={{ textAlign: "center" }}>{shotsLeft} shots left</p>
-
-      <div style={{ textAlign: "center", margin: "20px 0" }}>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          style={{ display: "none" }}
-          onChange={handleCapture}
-        />
-        <button
-          onClick={() => inputRef.current.click()}
-          disabled={uploading || shotsLeft <= 0}
-          style={{
-            background: "#111",
-            color: "#fff",
-            border: "none",
-            borderRadius: 8,
-            padding: "14px 32px",
-            fontSize: 18,
-            cursor: "pointer",
-          }}
-        >
-          {uploading ? "Uploading..." : "Take Photo"}
-        </button>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        {photos.map((url, i) => (
-          <img
-            key={i}
-            src={url}
-            alt=""
-            style={{
-              width: "100%",
-              aspectRatio: "1",
-              objectFit: "cover",
-              borderRadius: 4,
-              filter: "sepia(0.4) contrast(1.1) brightness(0.95) saturate(0.85)",
-            }}
+    <div style={{
+      minHeight: "100vh",
+      background: "#111",
+      color: "#fff",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: "sans-serif",
+      padding: 20
+    }}>
+      <h1 style={{ fontSize: 32, marginBottom: 8, letterSpacing: 2 }}>shoto</h1>
+      
+      {shotsLeft > 0 ? (
+        <>
+          <p style={{ color: "#aaa", marginBottom: 40 }}>
+            {shotsLeft} shot{shotsLeft !== 1 ? "s" : ""} remaining
+          </p>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            style={{ display: "none" }}
+            onChange={handleCapture}
           />
-        ))}
-      </div>
+          <button
+            onClick={() => inputRef.current.click()}
+            disabled={uploading}
+            style={{
+              background: uploading ? "#333" : "#fff",
+              color: "#111",
+              border: "none",
+              borderRadius: 50,
+              width: 80,
+              height: 80,
+              fontSize: 32,
+              cursor: uploading ? "not-allowed" : "pointer",
+            }}
+          >
+            {uploading ? "..." : "📷"}
+          </button>
+          {uploading && (
+            <p style={{ color: "#aaa", marginTop: 20 }}>Developing...</p>
+          )}
+        </>
+      ) : (
+        <p style={{ color: "#aaa", textAlign: "center" }}>
+          You've used all your shots. Photos will be revealed after the event.
+        </p>
+      )}
     </div>
   )
 }
