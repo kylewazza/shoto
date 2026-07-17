@@ -18,6 +18,104 @@ function getEventId() {
   return params.get("event")
 }
 
+function applyFilmFilter(file) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const canvas = document.createElement("canvas")
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext("2d")
+
+      ctx.drawImage(img, 0, 0)
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      const data = imageData.data
+
+      for (let i = 0; i < data.length; i += 4) {
+        let r = data[i]
+        let g = data[i + 1]
+        let b = data[i + 2]
+
+        // warm film tone - richer colours
+      r = Math.min(255, r * 1.15 + 12)
+      g = Math.min(255, g * 1.02 + 3)
+      b = Math.min(255, b * 0.78)
+
+      // saturation boost
+      const avg = (r + g + b) / 3
+      r = Math.min(255, Math.max(0, avg + (r - avg) * 1.4))
+      g = Math.min(255, Math.max(0, avg + (g - avg) * 1.3))
+      b = Math.min(255, Math.max(0, avg + (b - avg) * 1.2))
+
+      // contrast
+      r = Math.min(255, Math.max(0, (r - 128) * 1.12 + 128))
+      g = Math.min(255, Math.max(0, (g - 128) * 1.12 + 128))
+      b = Math.min(255, Math.max(0, (b - 128) * 1.12 + 128))
+
+      // slight fade (lifted blacks)
+      r = Math.min(255, r * 0.92 + 18)
+      g = Math.min(255, g * 0.92 + 12)
+      b = Math.min(255, b * 0.92 + 8)
+
+      // grain
+      const grain = (Math.random() - 0.5) * 22
+      data[i] = Math.min(255, Math.max(0, r + grain))
+      data[i + 1] = Math.min(255, Math.max(0, g + grain))
+      data[i + 2] = Math.min(255, Math.max(0, b + grain))
+      }
+
+      ctx.putImageData(imageData, 0, 0)
+
+      // vignette
+      const vignette = ctx.createRadialGradient(
+        canvas.width / 2, canvas.height / 2, canvas.height * 0.25,
+        canvas.width / 2, canvas.height / 2, canvas.height * 0.9
+      )
+      vignette.addColorStop(0, "rgba(0,0,0,0)")
+      vignette.addColorStop(1, "rgba(0,0,0,0.65)")
+      ctx.fillStyle = vignette
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      // light leak 1 — orange/red top left
+      const leak1 = ctx.createRadialGradient(
+        canvas.width * 0.05, canvas.height * 0.05, 0,
+        canvas.width * 0.05, canvas.height * 0.05, canvas.width * 0.65
+      )
+      leak1.addColorStop(0, "rgba(255, 100, 10, 0.45)")
+      leak1.addColorStop(0.4, "rgba(255, 60, 0, 0.2)")
+      leak1.addColorStop(1, "rgba(255, 0, 0, 0)")
+      ctx.fillStyle = leak1
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      // light leak 2 — yellow/orange bottom right
+      const leak2 = ctx.createRadialGradient(
+        canvas.width * 0.95, canvas.height * 0.92, 0,
+        canvas.width * 0.95, canvas.height * 0.92, canvas.width * 0.6
+      )
+      leak2.addColorStop(0, "rgba(255, 180, 0, 0.4)")
+      leak2.addColorStop(0.4, "rgba(255, 120, 0, 0.18)")
+      leak2.addColorStop(1, "rgba(255, 80, 0, 0)")
+      ctx.fillStyle = leak2
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      // horizontal streak — stronger orange along top edge
+      const streak = ctx.createLinearGradient(0, 0, canvas.width, 0)
+      streak.addColorStop(0, "rgba(255, 100, 40, 0.35)")
+      streak.addColorStop(0.25, "rgba(255, 140, 60, 0.15)")
+      streak.addColorStop(0.6, "rgba(255, 80, 40, 0.08)")
+      streak.addColorStop(1, "rgba(255, 80, 20, 0.3)")
+      ctx.fillStyle = streak
+      ctx.fillRect(0, 0, canvas.width, canvas.height * 0.22)
+
+      URL.revokeObjectURL(url)
+      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.88)
+    }
+    img.src = url
+  })
+}
+
 export default function App() {
   const eventId = getEventId()
   const [uploading, setUploading] = useState(false)
@@ -57,7 +155,9 @@ export default function App() {
     setUploading(true)
 
     try {
-      const compressed = await imageCompression(file, {
+      const filtered = await applyFilmFilter(file)
+
+      const compressed = await imageCompression(filtered, {
         maxSizeMB: 0.3,
         maxWidthOrHeight: 1920,
       })
