@@ -97,7 +97,7 @@ export default function Landing() {
           marginBottom: 48,
           textTransform: "uppercase",
           fontWeight: 300
-        }}>A disposable camera for your wedding</p>
+        }}>The disposable camera experience, reimagined</p>
         <h2 style={{
           fontFamily: "'Playfair Display', serif",
           fontSize: "clamp(42px, 7vw, 76px)",
@@ -118,7 +118,7 @@ export default function Landing() {
           fontWeight: 300
         }}>
           Guests scan a QR code and get a disposable camera on their phone.
-          No app. No gallery. Just candid moments — revealed the morning after.
+          No app. No gallery. Candid moments, revealed when you're ready.
         </p>
         <a href="/create" style={{
           background: "#f5efe6",
@@ -179,8 +179,8 @@ export default function Landing() {
         }}>
           {[
             { step: "I", title: "Create your event", desc: "Enter your event name. Get a QR code and your private dashboard link instantly." },
-            { step: "II", title: "Guests scan and shoot", desc: "No download, no account. They get a limited number of shots and nothing else — no gallery, no previews." },
-            { step: "III", title: "The morning after reveal", desc: "Open your dashboard, see every candid moment your guests captured. Download them all." },
+            { step: "II", title: "Guests scan and shoot", desc: "No download, no account. They get a limited number of shots and nothing else. No gallery, no previews." },
+            { step: "III", title: "The reveal", desc: "Open your dashboard, see every candid moment your guests captured. Download them all." },
           ].map(({ step, title, desc }) => (
             <div key={step} style={{ textAlign: "center" }}>
               <p style={{
