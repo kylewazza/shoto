@@ -38,76 +38,86 @@ function applyFilmFilter(file) {
         let g = data[i + 1]
         let b = data[i + 2]
 
-        // warm film tone - richer colours
-      r = Math.min(255, r * 1.15 + 12)
-      g = Math.min(255, g * 1.02 + 3)
-      b = Math.min(255, b * 0.78)
+        // slight cool shift — push blues and lavender on highlights
+        r = Math.min(255, r * 0.95)
+        g = Math.min(255, g * 0.96)
+        b = Math.min(255, b * 1.08)
 
-      // saturation boost
-      const avg = (r + g + b) / 3
-      r = Math.min(255, Math.max(0, avg + (r - avg) * 1.4))
-      g = Math.min(255, Math.max(0, avg + (g - avg) * 1.3))
-      b = Math.min(255, Math.max(0, avg + (b - avg) * 1.2))
+        // lift shadows slightly (film blacks are never pure black)
+        r = Math.min(255, r * 0.88 + 18)
+        g = Math.min(255, g * 0.88 + 16)
+        b = Math.min(255, b * 0.88 + 22)
 
-      // contrast
-      r = Math.min(255, Math.max(0, (r - 128) * 1.12 + 128))
-      g = Math.min(255, Math.max(0, (g - 128) * 1.12 + 128))
-      b = Math.min(255, Math.max(0, (b - 128) * 1.12 + 128))
+        // contrast
+        r = Math.min(255, Math.max(0, (r - 128) * 1.08 + 128))
+        g = Math.min(255, Math.max(0, (g - 128) * 1.08 + 128))
+        b = Math.min(255, Math.max(0, (b - 128) * 1.08 + 128))
 
-      // slight fade (lifted blacks)
-      r = Math.min(255, r * 0.92 + 18)
-      g = Math.min(255, g * 0.92 + 12)
-      b = Math.min(255, b * 0.92 + 8)
-
-      // grain
-      const grain = (Math.random() - 0.5) * 22
-      data[i] = Math.min(255, Math.max(0, r + grain))
-      data[i + 1] = Math.min(255, Math.max(0, g + grain))
-      data[i + 2] = Math.min(255, Math.max(0, b + grain))
+        // fine grain
+        const grain = (Math.random() - 0.5) * 18
+        data[i] = Math.min(255, Math.max(0, r + grain))
+        data[i + 1] = Math.min(255, Math.max(0, g + grain))
+        data[i + 2] = Math.min(255, Math.max(0, b + grain))
       }
 
       ctx.putImageData(imageData, 0, 0)
 
+      // subtle chromatic aberration — shift red channel slightly left
+      const aberrationData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      const aberration = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      const shift = Math.floor(canvas.width * 0.003)
+      for (let y = 0; y < canvas.height; y++) {
+        for (let x = shift; x < canvas.width; x++) {
+          const i = (y * canvas.width + x) * 4
+          const iShift = (y * canvas.width + (x - shift)) * 4
+          aberration.data[i] = aberrationData.data[iShift]
+        }
+      }
+      ctx.putImageData(aberration, 0, 0)
+
       // vignette
       const vignette = ctx.createRadialGradient(
-        canvas.width / 2, canvas.height / 2, canvas.height * 0.25,
-        canvas.width / 2, canvas.height / 2, canvas.height * 0.9
+        canvas.width / 2, canvas.height / 2, canvas.height * 0.2,
+        canvas.width / 2, canvas.height / 2, canvas.height * 0.85
       )
       vignette.addColorStop(0, "rgba(0,0,0,0)")
-      vignette.addColorStop(1, "rgba(0,0,0,0.65)")
+      vignette.addColorStop(1, "rgba(0,0,0,0.55)")
       ctx.fillStyle = vignette
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      // light leak 1 — orange/red top left
+      // light leak — orange bottom left corner only
       const leak1 = ctx.createRadialGradient(
-        canvas.width * 0.05, canvas.height * 0.05, 0,
-        canvas.width * 0.05, canvas.height * 0.05, canvas.width * 0.65
+        canvas.width * 0.0, canvas.height * 1.0, 0,
+        canvas.width * 0.0, canvas.height * 1.0, canvas.width * 0.45
       )
-      leak1.addColorStop(0, "rgba(255, 100, 10, 0.45)")
-      leak1.addColorStop(0.4, "rgba(255, 60, 0, 0.2)")
+      leak1.addColorStop(0, "rgba(255, 100, 20, 0.35)")
+      leak1.addColorStop(0.5, "rgba(255, 60, 0, 0.12)")
       leak1.addColorStop(1, "rgba(255, 0, 0, 0)")
       ctx.fillStyle = leak1
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      // light leak 2 — yellow/orange bottom right
+      // light leak — subtle top right
       const leak2 = ctx.createRadialGradient(
-        canvas.width * 0.95, canvas.height * 0.92, 0,
-        canvas.width * 0.95, canvas.height * 0.92, canvas.width * 0.6
+        canvas.width * 1.0, canvas.height * 0.0, 0,
+        canvas.width * 1.0, canvas.height * 0.0, canvas.width * 0.35
       )
-      leak2.addColorStop(0, "rgba(255, 180, 0, 0.4)")
-      leak2.addColorStop(0.4, "rgba(255, 120, 0, 0.18)")
-      leak2.addColorStop(1, "rgba(255, 80, 0, 0)")
+      leak2.addColorStop(0, "rgba(255, 140, 40, 0.2)")
+      leak2.addColorStop(0.5, "rgba(255, 80, 0, 0.07)")
+      leak2.addColorStop(1, "rgba(255, 0, 0, 0)")
       ctx.fillStyle = leak2
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      // horizontal streak — stronger orange along top edge
-      const streak = ctx.createLinearGradient(0, 0, canvas.width, 0)
-      streak.addColorStop(0, "rgba(255, 100, 40, 0.35)")
-      streak.addColorStop(0.25, "rgba(255, 140, 60, 0.15)")
-      streak.addColorStop(0.6, "rgba(255, 80, 40, 0.08)")
-      streak.addColorStop(1, "rgba(255, 80, 20, 0.3)")
-      ctx.fillStyle = streak
-      ctx.fillRect(0, 0, canvas.width, canvas.height * 0.22)
+      // date stamp — bottom right
+      const now = new Date()
+      const day = String(now.getDate()).padStart(2, "0")
+      const month = String(now.getMonth() + 1).padStart(2, "0")
+      const year = String(now.getFullYear()).slice(2)
+      const dateStr = `${day} ${month} ${year}`
+      const fontSize = Math.floor(canvas.width * 0.038)
+      ctx.font = `${fontSize}px 'Courier New', monospace`
+      ctx.fillStyle = "rgba(255, 140, 0, 0.85)"
+      ctx.textAlign = "right"
+      ctx.fillText(dateStr, canvas.width - fontSize, canvas.height - fontSize)
 
       URL.revokeObjectURL(url)
       canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.88)
