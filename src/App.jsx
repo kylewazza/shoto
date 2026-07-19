@@ -129,6 +129,7 @@ export default function App() {
   const eventId = getEventId()
   const deviceId = getDeviceId()
   const [uploading, setUploading] = useState(false)
+  const [started, setStarted] = useState(false)
   const [shotCount, setShotCount] = useState(
     parseInt(localStorage.getItem(`shoto_count_${eventId}`) || "0")
   )
@@ -179,6 +180,45 @@ export default function App() {
       <div style={centreStyle}>
         <h1 style={logoStyle}>shoto</h1>
         <p style={mutedStyle}>No event found. Please scan the QR code.</p>
+      </div>
+    )
+  }
+
+  if (!started) {
+    return (
+      <div style={centreStyle}>
+        <h1 style={logoStyle}>shoto</h1>
+        <p style={{
+          color: "#c4a882",
+          fontSize: 11,
+          letterSpacing: 4,
+          textTransform: "uppercase",
+          marginBottom: 48,
+          fontWeight: 300
+        }}>Your disposable camera</p>
+        <p style={{ ...mutedStyle, marginBottom: 16, maxWidth: 280, textAlign: "center", lineHeight: 1.8 }}>
+          You have <strong style={{ color: "#f5efe6" }}>{PHOTO_LIMIT} shots</strong> to use throughout the event.
+        </p>
+        <p style={{ ...mutedStyle, marginBottom: 48, maxWidth: 280, textAlign: "center", lineHeight: 1.8 }}>
+          Photos won't be visible until after the event. Just like a real disposable camera.
+        </p>
+        <button
+          onClick={() => setStarted(true)}
+          style={{
+            background: "#f5efe6",
+            color: "#1a1410",
+            border: "none",
+            borderRadius: 4,
+            padding: "16px 48px",
+            fontSize: 12,
+            fontWeight: 500,
+            letterSpacing: 3,
+            textTransform: "uppercase",
+            cursor: "pointer"
+          }}
+        >
+          Start shooting
+        </button>
       </div>
     )
   }
