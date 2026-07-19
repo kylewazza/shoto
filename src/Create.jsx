@@ -1,10 +1,4 @@
 import { useState } from "react"
-import { QRCodeSVG } from "qrcode.react"
-import { supabase } from "./lib/supabase"
-
-function generateEventId() {
-  return crypto.randomUUID()
-}
 
 const OCCASIONS = [
   "Wedding",
@@ -17,7 +11,32 @@ const OCCASIONS = [
   "Other"
 ]
 
-function getDefaultReveal(occasion, eventDate) {
+const TIERS = [
+  {
+    id: "basic",
+    name: "Basic",
+    price: "£9.99",
+    guests: "Up to 75 guests",
+    shots: "30 shots per guest"
+  },
+  {
+    id: "standard",
+    name: "Standard",
+    price: "£19.99",
+    guests: "Up to 100 guests",
+    shots: "40 shots per guest",
+    featured: true
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    price: "£29.99",
+    guests: "Unlimited guests",
+    shots: "50 shots per guest"
+  }
+]
+
+function getDefaultReveal(eventDate) {
   const date = new Date(eventDate)
   date.setDate(date.getDate() + 1)
   date.setHours(10, 0, 0, 0)
@@ -26,50 +45,51 @@ function getDefaultReveal(occasion, eventDate) {
 }
 
 export default function Create() {
-  const [step, setStep] = useState(1)
+  const [tier, setTier] = useState("standard")
   const [eventName, setEventName] = useState("")
   const [occasion, setOccasion] = useState("")
   const [eventDate, setEventDate] = useState("")
   const [revealAt, setRevealAt] = useState("")
-  const [eventId, setEventId] = useState(null)
   const [loading, setLoading] = useState(false)
 
   function handleDateChange(date) {
     setEventDate(date)
-    if (occasion) setRevealAt(getDefaultReveal(occasion, date))
+    setRevealAt(getDefaultReveal(date))
   }
 
-  function handleOccasionChange(occ) {
-    setOccasion(occ)
-    if (eventDate) setRevealAt(getDefaultReveal(occ, eventDate))
-  }
-
-  async function createEvent() {
-    if (!eventName.trim() || !occasion || !eventDate || !revealAt) return
+  async function handleCheckout() {
+    if (!tier || !eventName.trim() || !occasion || !eventDate || !revealAt) return
     setLoading(true)
 
-    const id = generateEventId()
+    try {
+      const res = await fetch("/api/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tier,
+          eventName: eventName.trim(),
+          occasion,
+          eventDate,
+          revealAt
+        })
+      })
 
-    const { error } = await supabase.from("events").insert({
-      id,
-      name: eventName.trim(),
-      occasion,
-      reveal_at: new Date(revealAt).toISOString()
-    })
+      const data = await res.json()
 
-    if (error) {
-      console.error(error)
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        alert("Something went wrong. Please try again.")
+        setLoading(false)
+      }
+    } catch (err) {
+      console.error(err)
       alert("Something went wrong. Please try again.")
       setLoading(false)
-      return
     }
-
-    setEventId(id)
-    setLoading(false)
   }
 
-  const guestUrl = `https://shoto.co.uk/camera?event=${eventId}`
-  const dashboardUrl = `https://shoto.co.uk/dashboard?event=${eventId}`
+  const isValid = tier && eventName.trim() && occasion && eventDate && revealAt
 
   const inputStyle = {
     width: "100%",
@@ -99,111 +119,102 @@ export default function Create() {
       minHeight: "100vh",
       background: "#1a1410",
       color: "#f5efe6",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
       fontFamily: "'Inter', sans-serif",
-      padding: 24
+      padding: 24,
+      maxWidth: 520,
+      margin: "0 auto"
     }}>
-      <h1 style={{ letterSpacing: 4, fontSize: 18, fontWeight: 300, marginBottom: 48 }}>shoto</h1>
+      <h1 style={{ letterSpacing: 4, fontSize: 18, fontWeight: 300, marginBottom: 48, marginTop: 32 }}>shoto</h1>
 
-      {!eventId ? (
-        <div style={{ width: "100%", maxWidth: 420 }}>
-          <p style={{ color: "#c4a882", letterSpacing: 4, fontSize: 10, textTransform: "uppercase", marginBottom: 32, fontWeight: 300 }}>Create your event</p>
+      <p style={{ color: "#c4a882", letterSpacing: 4, fontSize: 10, textTransform: "uppercase", marginBottom: 32, fontWeight: 300 }}>Create your event</p>
 
-          <label style={labelStyle}>Event name</label>
-          <input
-            type="text"
-            placeholder="e.g. Sarah & Tom's Wedding"
-            value={eventName}
-            onChange={(e) => setEventName(e.target.value)}
-            style={inputStyle}
-          />
-
-          <label style={labelStyle}>Occasion</label>
-          <select
-            value={occasion}
-            onChange={(e) => handleOccasionChange(e.target.value)}
-            style={{ ...inputStyle, cursor: "pointer" }}
-          >
-            <option value="" style={{ background: "#1a1410" }}>Select occasion</option>
-            {OCCASIONS.map(o => (
-              <option key={o} value={o} style={{ background: "#1a1410" }}>{o}</option>
-            ))}
-          </select>
-
-          <label style={labelStyle}>Event date</label>
-          <input
-            type="date"
-            value={eventDate}
-            onChange={(e) => handleDateChange(e.target.value)}
-            style={inputStyle}
-          />
-
-          <label style={labelStyle}>Gallery reveal time</label>
-          <input
-            type="datetime-local"
-            value={revealAt}
-            onChange={(e) => setRevealAt(e.target.value)}
-            style={inputStyle}
-          />
-          <p style={{ color: "#a89070", fontSize: 11, marginTop: -8, marginBottom: 24, letterSpacing: 0.5 }}>
-            Default is 10am the morning after your event. You can change this.
-          </p>
-
-          <button
-            onClick={createEvent}
-            disabled={!eventName.trim() || !occasion || !eventDate || !revealAt || loading}
+      {/* Tier selection */}
+      <label style={labelStyle}>Package</label>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 24 }}>
+        {TIERS.map(t => (
+          <div
+            key={t.id}
+            onClick={() => setTier(t.id)}
             style={{
-              width: "100%",
-              padding: "14px 16px",
-              borderRadius: 4,
-              border: "none",
-              background: eventName.trim() && occasion && eventDate && revealAt ? "#f5efe6" : "#2a2420",
-              color: eventName.trim() && occasion && eventDate && revealAt ? "#1a1410" : "#4a3f35",
-              fontSize: 12,
-              fontWeight: 500,
-              letterSpacing: 3,
-              textTransform: "uppercase",
-              cursor: eventName.trim() && occasion && eventDate && revealAt ? "pointer" : "not-allowed"
+              border: tier === t.id ? "1px solid rgba(245,239,230,0.4)" : "1px solid rgba(245,239,230,0.1)",
+              borderRadius: 6,
+              padding: "12px 8px",
+              textAlign: "center",
+              cursor: "pointer",
+              background: tier === t.id ? "rgba(245,239,230,0.05)" : "transparent"
             }}
           >
-            {loading ? "Creating..." : "Create Event"}
-          </button>
-        </div>
-      ) : (
-        <div style={{ width: "100%", maxWidth: 500, textAlign: "center" }}>
-          <p style={{ color: "#c4a882", letterSpacing: 4, fontSize: 10, textTransform: "uppercase", marginBottom: 16, fontWeight: 300 }}>Event created</p>
-          <h2 style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontWeight: 400, fontSize: 28, marginBottom: 8 }}>{eventName}</h2>
-          <p style={{ color: "#a89070", fontSize: 13, marginBottom: 40 }}>Gallery reveals on {new Date(revealAt).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} at {new Date(revealAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</p>
-
-          <div style={{ marginBottom: 40 }}>
-            <p style={{ color: "#a89070", marginBottom: 12, fontSize: 12, letterSpacing: 2, textTransform: "uppercase" }}>Guest QR Code</p>
-            <div style={{ background: "#f5efe6", display: "inline-block", padding: 20, borderRadius: 8 }}>
-              <QRCodeSVG value={guestUrl} size={200} />
-            </div>
+            <p style={{ color: "#c4a882", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>{t.name}</p>
+            <p style={{ fontSize: 16, fontFamily: "'Playfair Display', serif", fontStyle: "italic", marginBottom: 4 }}>{t.price}</p>
+            <p style={{ color: "#a89070", fontSize: 10 }}>{t.guests}</p>
+            <p style={{ color: "#a89070", fontSize: 10 }}>{t.shots}</p>
           </div>
+        ))}
+      </div>
 
-          <div style={{
-            background: "rgba(255,255,255,0.02)",
-            borderRadius: 8,
-            padding: 24,
-            textAlign: "left",
-            marginBottom: 24,
-            border: "1px solid rgba(245,239,230,0.08)"
-          }}>
-            <p style={{ color: "#a89070", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", margin: "0 0 6px" }}>Guest link</p>
-            <p style={{ fontSize: 13, wordBreak: "break-all", margin: "0 0 20px", color: "#f5efe6" }}>{guestUrl}</p>
-            <p style={{ color: "#a89070", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", margin: "0 0 6px" }}>Your dashboard — keep this private</p>
-            <p style={{ fontSize: 13, wordBreak: "break-all", margin: 0, color: "#f5efe6" }}>{dashboardUrl}</p>
-          </div>
+      <label style={labelStyle}>Event name</label>
+      <input
+        type="text"
+        placeholder="e.g. Sarah & Tom's Wedding"
+        value={eventName}
+        onChange={(e) => setEventName(e.target.value)}
+        style={inputStyle}
+      />
 
-          <p style={{ color: "#a89070", fontSize: 11, letterSpacing: 1 }}>
-            Save your dashboard link — you'll need it to view photos after the reveal.
-          </p>
-        </div>
-      )}
+      <label style={labelStyle}>Occasion</label>
+      <select
+        value={occasion}
+        onChange={(e) => setOccasion(e.target.value)}
+        style={{ ...inputStyle, cursor: "pointer" }}
+      >
+        <option value="" style={{ background: "#1a1410" }}>Select occasion</option>
+        {OCCASIONS.map(o => (
+          <option key={o} value={o} style={{ background: "#1a1410" }}>{o}</option>
+        ))}
+      </select>
+
+      <label style={labelStyle}>Event date</label>
+      <input
+        type="date"
+        value={eventDate}
+        onChange={(e) => handleDateChange(e.target.value)}
+        style={inputStyle}
+      />
+
+      <label style={labelStyle}>Gallery reveal time</label>
+      <input
+        type="datetime-local"
+        value={revealAt}
+        onChange={(e) => setRevealAt(e.target.value)}
+        style={inputStyle}
+      />
+      <p style={{ color: "#a89070", fontSize: 11, marginTop: -8, marginBottom: 32, letterSpacing: 0.5 }}>
+        Default is 10am the morning after your event. You can change this.
+      </p>
+
+      <button
+        onClick={handleCheckout}
+        disabled={!isValid || loading}
+        style={{
+          width: "100%",
+          padding: "16px",
+          borderRadius: 4,
+          border: "none",
+          background: isValid ? "#f5efe6" : "#2a2420",
+          color: isValid ? "#1a1410" : "#4a3f35",
+          fontSize: 12,
+          fontWeight: 500,
+          letterSpacing: 3,
+          textTransform: "uppercase",
+          cursor: isValid ? "pointer" : "not-allowed"
+        }}
+      >
+        {loading ? "Redirecting to payment..." : `Pay ${TIERS.find(t => t.id === tier)?.price}`}
+      </button>
+
+      <p style={{ color: "#4a3f35", fontSize: 11, textAlign: "center", marginTop: 16 }}>
+        Secure payment via Stripe
+      </p>
     </div>
   )
 }
