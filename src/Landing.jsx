@@ -133,7 +133,7 @@ export default function Landing() {
           textTransform: "uppercase"
         }}>Create your event</a>
         <p style={{
-          color: "#4a3f35",
+          color: "#a89070",
           fontSize: 12,
           marginTop: 20,
           letterSpacing: 1
@@ -185,7 +185,7 @@ export default function Landing() {
             <div key={step} style={{ textAlign: "center" }}>
               <p style={{
                 fontFamily: "'Playfair Display', serif",
-                color: "#4a3f35",
+                color: "#a89070",
                 fontSize: 18,
                 marginBottom: 24,
                 fontStyle: "italic"
@@ -237,7 +237,7 @@ export default function Landing() {
         }}>Pricing</p>
         <p style={{
           textAlign: "center",
-          color: "#4a3f35",
+          color: "#a89070",
           fontSize: 13,
           marginBottom: 64,
           letterSpacing: 1
@@ -331,7 +331,7 @@ export default function Landing() {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        color: "#4a3f35",
+        color: "#a89070",
         fontSize: 11,
         letterSpacing: 2,
         position: "relative",

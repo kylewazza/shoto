@@ -163,7 +163,7 @@ export default function Dashboard() {
           }}>
             <Countdown revealAt={event.reveal_at} />
           </p>
-          <p style={{ color: "#4a3f35", fontSize: 12 }}>{revealDate} at {revealTime}</p>
+          <p style={{ color: "#a89070", fontSize: 12 }}>{revealDate} at {revealTime}</p>
         </div>
 
         <div style={{ marginBottom: 32 }}>
@@ -173,7 +173,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <p style={{ color: "#4a3f35", fontSize: 11 }}>Guests can still scan and take photos until the reveal.</p>
+        <p style={{ color: "#a89070", fontSize: 11 }}>Guests can still scan and take photos until the reveal.</p>
       </div>
     )
   }

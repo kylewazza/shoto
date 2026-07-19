@@ -147,7 +147,7 @@ export default function Create() {
             onChange={(e) => setRevealAt(e.target.value)}
             style={inputStyle}
           />
-          <p style={{ color: "#4a3f35", fontSize: 11, marginTop: -8, marginBottom: 24, letterSpacing: 0.5 }}>
+          <p style={{ color: "#a89070", fontSize: 11, marginTop: -8, marginBottom: 24, letterSpacing: 0.5 }}>
             Default is 10am the morning after your event. You can change this.
           </p>
 
@@ -198,7 +198,7 @@ export default function Create() {
             <p style={{ fontSize: 13, wordBreak: "break-all", margin: 0, color: "#f5efe6" }}>{dashboardUrl}</p>
           </div>
 
-          <p style={{ color: "#4a3f35", fontSize: 11, letterSpacing: 1 }}>
+          <p style={{ color: "#a89070", fontSize: 11, letterSpacing: 1 }}>
             Save your dashboard link — you'll need it to view photos after the reveal.
           </p>
         </div>
