@@ -21,7 +21,8 @@ function getDefaultReveal(occasion, eventDate) {
   const date = new Date(eventDate)
   date.setDate(date.getDate() + 1)
   date.setHours(10, 0, 0, 0)
-  return date.toISOString().slice(0, 16)
+  const offset = date.getTimezoneOffset() * 60000
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16)
 }
 
 export default function Create() {
