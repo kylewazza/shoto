@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { supabase } from "./lib/supabase"
 import imageCompression from "browser-image-compression"
 
@@ -38,22 +38,18 @@ function applyFilmFilter(file) {
         let g = data[i + 1]
         let b = data[i + 2]
 
-        // slight cool shift — push blues and lavender on highlights
         r = Math.min(255, r * 0.95)
         g = Math.min(255, g * 0.96)
         b = Math.min(255, b * 1.08)
 
-        // lift shadows slightly (film blacks are never pure black)
         r = Math.min(255, r * 0.88 + 18)
         g = Math.min(255, g * 0.88 + 16)
         b = Math.min(255, b * 0.88 + 22)
 
-        // contrast
         r = Math.min(255, Math.max(0, (r - 128) * 1.08 + 128))
         g = Math.min(255, Math.max(0, (g - 128) * 1.08 + 128))
         b = Math.min(255, Math.max(0, (b - 128) * 1.08 + 128))
 
-        // fine grain
         const grain = (Math.random() - 0.5) * 18
         data[i] = Math.min(255, Math.max(0, r + grain))
         data[i + 1] = Math.min(255, Math.max(0, g + grain))
@@ -62,7 +58,6 @@ function applyFilmFilter(file) {
 
       ctx.putImageData(imageData, 0, 0)
 
-      // subtle chromatic aberration — shift red channel slightly left
       const aberrationData = ctx.getImageData(0, 0, canvas.width, canvas.height)
       const aberration = ctx.getImageData(0, 0, canvas.width, canvas.height)
       const shift = Math.floor(canvas.width * 0.003)
@@ -75,7 +70,6 @@ function applyFilmFilter(file) {
       }
       ctx.putImageData(aberration, 0, 0)
 
-      // vignette
       const vignette = ctx.createRadialGradient(
         canvas.width / 2, canvas.height / 2, canvas.height * 0.2,
         canvas.width / 2, canvas.height / 2, canvas.height * 0.85
@@ -85,7 +79,6 @@ function applyFilmFilter(file) {
       ctx.fillStyle = vignette
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      // light leak — orange bottom left corner only
       const leak1 = ctx.createRadialGradient(
         canvas.width * 0.0, canvas.height * 1.0, 0,
         canvas.width * 0.0, canvas.height * 1.0, canvas.width * 0.45
@@ -96,7 +89,6 @@ function applyFilmFilter(file) {
       ctx.fillStyle = leak1
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      // light leak — subtle top right
       const leak2 = ctx.createRadialGradient(
         canvas.width * 1.0, canvas.height * 0.0, 0,
         canvas.width * 1.0, canvas.height * 0.0, canvas.width * 0.35
@@ -107,7 +99,14 @@ function applyFilmFilter(file) {
       ctx.fillStyle = leak2
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      // date stamp — bottom right
+      const streak = ctx.createLinearGradient(0, 0, canvas.width, 0)
+      streak.addColorStop(0, "rgba(255, 100, 40, 0.35)")
+      streak.addColorStop(0.25, "rgba(255, 140, 60, 0.15)")
+      streak.addColorStop(0.6, "rgba(255, 80, 40, 0.08)")
+      streak.addColorStop(1, "rgba(255, 80, 20, 0.3)")
+      ctx.fillStyle = streak
+      ctx.fillRect(0, 0, canvas.width, canvas.height * 0.22)
+
       const now = new Date()
       const day = String(now.getDate()).padStart(2, "0")
       const month = String(now.getMonth() + 1).padStart(2, "0")
@@ -128,28 +127,58 @@ function applyFilmFilter(file) {
 
 export default function App() {
   const eventId = getEventId()
+  const deviceId = getDeviceId()
   const [uploading, setUploading] = useState(false)
   const [shotCount, setShotCount] = useState(
     parseInt(localStorage.getItem(`shoto_count_${eventId}`) || "0")
   )
+  const [sessionLoaded, setSessionLoaded] = useState(false)
   const inputRef = useRef(null)
+
+  useEffect(() => {
+    if (eventId) loadSession()
+  }, [])
+
+  async function loadSession() {
+    try {
+      const { data } = await supabase
+        .from("guest_sessions")
+        .select("shot_count")
+        .eq("event_id", eventId)
+        .eq("device_id", deviceId)
+        .single()
+
+      if (data) {
+        const remoteCount = data.shot_count
+        const localCount = parseInt(localStorage.getItem(`shoto_count_${eventId}`) || "0")
+        const count = Math.max(remoteCount, localCount)
+        setShotCount(count)
+        localStorage.setItem(`shoto_count_${eventId}`, count)
+      }
+    } catch (e) {
+      // no session found, start fresh
+    }
+    setSessionLoaded(true)
+  }
+
+  async function updateSession(newCount) {
+    await supabase
+      .from("guest_sessions")
+      .upsert({
+        event_id: eventId,
+        device_id: deviceId,
+        shot_count: newCount,
+        updated_at: new Date().toISOString()
+      }, { onConflict: "event_id,device_id" })
+  }
 
   const shotsLeft = PHOTO_LIMIT - shotCount
 
   if (!eventId) {
     return (
-      <div style={{
-        minHeight: "100vh",
-        background: "#111",
-        color: "#fff",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "sans-serif"
-      }}>
-        <h1 style={{ letterSpacing: 2 }}>shoto</h1>
-        <p style={{ color: "#aaa" }}>No event found. Please scan the QR code.</p>
+      <div style={centreStyle}>
+        <h1 style={logoStyle}>shoto</h1>
+        <p style={mutedStyle}>No event found. Please scan the QR code.</p>
       </div>
     )
   }
@@ -166,15 +195,12 @@ export default function App() {
 
     try {
       const filtered = await applyFilmFilter(file)
-
       const compressed = await imageCompression(filtered, {
         maxSizeMB: 0.3,
         maxWidthOrHeight: 1920,
       })
 
-      const deviceId = getDeviceId()
       const path = `${eventId}/${deviceId}_${Date.now()}.jpg`
-
       const { error } = await supabase.storage
         .from("photos")
         .upload(path, compressed)
@@ -184,6 +210,7 @@ export default function App() {
       const newCount = shotCount + 1
       localStorage.setItem(`shoto_count_${eventId}`, newCount)
       setShotCount(newCount)
+      await updateSession(newCount)
     } catch (err) {
       console.error(err)
       alert("Something went wrong, try again.")
@@ -193,22 +220,12 @@ export default function App() {
   }
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#111",
-      color: "#fff",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: "sans-serif",
-      padding: 20
-    }}>
-      <h1 style={{ fontSize: 32, marginBottom: 8, letterSpacing: 2 }}>shoto</h1>
+    <div style={centreStyle}>
+      <h1 style={logoStyle}>shoto</h1>
 
       {shotsLeft > 0 ? (
         <>
-          <p style={{ color: "#aaa", marginBottom: 40 }}>
+          <p style={{ ...mutedStyle, marginBottom: 40 }}>
             {shotsLeft} shot{shotsLeft !== 1 ? "s" : ""} remaining
           </p>
           <input
@@ -236,14 +253,38 @@ export default function App() {
             {uploading ? "..." : "📷"}
           </button>
           {uploading && (
-            <p style={{ color: "#aaa", marginTop: 20 }}>Developing...</p>
+            <p style={{ ...mutedStyle, marginTop: 20 }}>Developing...</p>
           )}
         </>
       ) : (
-        <p style={{ color: "#aaa", textAlign: "center" }}>
-          You've used all your shots. Photos will be revealed after the event.
+        <p style={{ ...mutedStyle, textAlign: "center", maxWidth: 300 }}>
+          You've used all your shots. Photos will be revealed when the event ends.
         </p>
       )}
     </div>
   )
+}
+
+const centreStyle = {
+  minHeight: "100vh",
+  background: "#111",
+  color: "#fff",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  fontFamily: "sans-serif",
+  padding: 20
+}
+
+const logoStyle = {
+  fontSize: 32,
+  marginBottom: 8,
+  letterSpacing: 2,
+  fontWeight: 300
+}
+
+const mutedStyle = {
+  color: "#aaa",
+  fontSize: 14
 }
