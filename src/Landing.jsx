@@ -137,7 +137,7 @@ export default function Landing() {
           fontSize: 12,
           marginTop: 20,
           letterSpacing: 1
-        }}>From £9.99 per event — no subscription</p>
+        }}>From £9.99 per event. No subscription</p>
       </div>
 
       {/* Divider */}
