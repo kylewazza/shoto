@@ -1,5 +1,11 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
+  ],
+  "crons": [
+    {
+      "path": "/api/reveal-check",
+      "schedule": "*/5 * * * *"
+    }
   ]
 }
