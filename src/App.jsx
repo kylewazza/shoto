@@ -2,8 +2,6 @@ import { useState, useRef, useEffect } from "react"
 import { supabase } from "./lib/supabase"
 import imageCompression from "browser-image-compression"
 
-const PHOTO_LIMIT = 50
-
 function getDeviceId() {
   let id = localStorage.getItem("shoto_device_id")
   if (!id) {
@@ -133,6 +131,7 @@ export default function App() {
   const [shotCount, setShotCount] = useState(
     parseInt(localStorage.getItem(`shoto_count_${eventId}`) || "0")
   )
+  const [photoLimit, setPhotoLimit] = useState(50)
   const [sessionLoaded, setSessionLoaded] = useState(false)
   const inputRef = useRef(null)
 
@@ -142,6 +141,16 @@ export default function App() {
 
   async function loadSession() {
     try {
+      const { data: eventData } = await supabase
+        .from("events")
+        .select("photo_limit")
+        .eq("id", eventId)
+        .single()
+
+      if (eventData?.photo_limit) {
+        setPhotoLimit(eventData.photo_limit)
+      }
+
       const { data } = await supabase
         .from("guest_sessions")
         .select("shot_count")
@@ -173,7 +182,7 @@ export default function App() {
       }, { onConflict: "event_id,device_id" })
   }
 
-  const shotsLeft = PHOTO_LIMIT - shotCount
+  const shotsLeft = photoLimit - shotCount
 
   if (!eventId) {
     return (
@@ -197,7 +206,7 @@ export default function App() {
           fontWeight: 300
         }}>Your disposable camera</p>
         <p style={{ ...mutedStyle, marginBottom: 16, maxWidth: 280, textAlign: "center", lineHeight: 1.8 }}>
-          You have <strong style={{ color: "#f5efe6" }}>{PHOTO_LIMIT} shots</strong> to use throughout the event.
+          You have <strong style={{ color: "#f5efe6" }}>{photoLimit} shots</strong> to use throughout the event.
         </p>
         <p style={{ ...mutedStyle, marginBottom: 48, maxWidth: 280, textAlign: "center", lineHeight: 1.8 }}>
           Photos won't be visible until after the event. Just like a real disposable camera.
@@ -226,7 +235,7 @@ export default function App() {
   async function handleCapture(e) {
     const file = e.target.files[0]
     if (!file) return
-    if (shotCount >= PHOTO_LIMIT) {
+    if (shotCount >= photoLimit) {
       alert("You've used all your shots!")
       return
     }
