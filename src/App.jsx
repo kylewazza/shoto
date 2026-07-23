@@ -132,6 +132,7 @@ export default function App() {
     parseInt(localStorage.getItem(`shoto_count_${eventId}`) || "0")
   )
   const [photoLimit, setPhotoLimit] = useState(50)
+  const [guestLimitReached, setGuestLimitReached] = useState(false)
   const [sessionLoaded, setSessionLoaded] = useState(false)
   const inputRef = useRef(null)
 
@@ -143,7 +144,7 @@ export default function App() {
     try {
       const { data: eventData } = await supabase
         .from("events")
-        .select("photo_limit")
+        .select("photo_limit, guest_limit")
         .eq("id", eventId)
         .single()
 
@@ -151,22 +152,33 @@ export default function App() {
         setPhotoLimit(eventData.photo_limit)
       }
 
-      const { data } = await supabase
+      const { data: existingSession } = await supabase
         .from("guest_sessions")
         .select("shot_count")
         .eq("event_id", eventId)
         .eq("device_id", deviceId)
         .single()
 
-      if (data) {
-        const remoteCount = data.shot_count
+      if (existingSession) {
+        const remoteCount = existingSession.shot_count
         const localCount = parseInt(localStorage.getItem(`shoto_count_${eventId}`) || "0")
         const count = Math.max(remoteCount, localCount)
         setShotCount(count)
         localStorage.setItem(`shoto_count_${eventId}`, count)
+      } else {
+        if (eventData?.guest_limit) {
+          const { count } = await supabase
+            .from("guest_sessions")
+            .select("*", { count: "exact", head: true })
+            .eq("event_id", eventId)
+
+          if (count >= eventData.guest_limit) {
+            setGuestLimitReached(true)
+          }
+        }
       }
     } catch (e) {
-      // no session found, start fresh
+      // start fresh
     }
     setSessionLoaded(true)
   }
@@ -189,6 +201,25 @@ export default function App() {
       <div style={centreStyle}>
         <h1 style={logoStyle}>shoto</h1>
         <p style={mutedStyle}>No event found. Please scan the QR code.</p>
+      </div>
+    )
+  }
+
+  if (guestLimitReached) {
+    return (
+      <div style={centreStyle}>
+        <h1 style={logoStyle}>shoto</h1>
+        <p style={{
+          color: "#c4a882",
+          fontSize: 11,
+          letterSpacing: 4,
+          textTransform: "uppercase",
+          marginBottom: 32,
+          fontWeight: 300
+        }}>Event full</p>
+        <p style={{ ...mutedStyle, textAlign: "center", maxWidth: 280, lineHeight: 1.8 }}>
+          This event has reached its guest limit. No more cameras are available.
+        </p>
       </div>
     )
   }
