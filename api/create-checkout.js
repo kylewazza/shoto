@@ -9,9 +9,9 @@ import Stripe from "stripe"
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 const PRICES = {
-  basic: "price_1Tw79GCR1ZJTrE5ZB67Pu9SK",
-  standard: "price_1Tw7AGCR1ZJTrE5ZTPMYeqQd",
-  premium: "price_1Tw7AsCR1ZJTrE5ZgpaU5r2h"
+  basic: "price_1TuyW7CR1ZJTrE5ZyII3aPe8",
+  standard: "price_1TuyYcCR1ZJTrE5ZXbG30hVg",
+  premium: "price_1TuyZECR1ZJTrE5Z34QvhjMx"
 }
 
 export default async function handler(req, res) {
