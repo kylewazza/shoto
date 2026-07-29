@@ -1,4 +1,8 @@
+import { useRef, useState } from "react"
+
 export default function Landing() {
+  const pricingRef = useRef(null)
+
   const tiers = [
     {
       name: "Basic",
@@ -16,10 +20,14 @@ export default function Landing() {
     {
       name: "Premium",
       price: "£29.99",
-      guests: "Unlimited guests",
+      guests: "Up to 150 guests",
       shots: "50 shots per guest",
     },
   ]
+
+  function scrollToPricing() {
+    pricingRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
 
   return (
     <div style={{
@@ -27,6 +35,8 @@ export default function Landing() {
       background: "#1a1410",
       color: "#f5efe6",
       fontFamily: "'Inter', sans-serif",
+      margin: 0,
+      padding: 0,
     }}>
 
       {/* Grain overlay */}
@@ -54,7 +64,7 @@ export default function Landing() {
       {/* Nav */}
       <nav style={{
         display: "flex",
-        justifyContent: "space-between",
+        justifyContent: "center",
         alignItems: "center",
         padding: "28px 48px",
         position: "relative",
@@ -68,17 +78,6 @@ export default function Landing() {
           fontWeight: 300,
           color: "#f5efe6"
         }}>shoto</h1>
-        <a href="/create" style={{
-          border: "1px solid rgba(245,239,230,0.25)",
-          color: "#f5efe6",
-          padding: "9px 22px",
-          borderRadius: 3,
-          textDecoration: "none",
-          fontWeight: 300,
-          fontSize: 12,
-          letterSpacing: 2,
-          textTransform: "uppercase"
-        }}>Get Started</a>
       </nav>
 
       {/* Hero */}
@@ -93,21 +92,23 @@ export default function Landing() {
         <p style={{
           color: "#c4a882",
           letterSpacing: 6,
-          fontSize: 10,
-          marginBottom: 48,
+          fontSize: 13,
+          marginBottom: 32,
           textTransform: "uppercase",
           fontWeight: 300
         }}>The disposable camera experience, reimagined</p>
+
         <h2 style={{
           fontFamily: "'Playfair Display', serif",
-          fontSize: "clamp(42px, 7vw, 76px)",
+          fontSize: "clamp(36px, 5.5vw, 62px)",
           fontWeight: 400,
           lineHeight: 1.15,
           marginBottom: 40,
           color: "#f5efe6",
           fontStyle: "italic",
           textShadow: "0 0 80px rgba(255,180,80,0.15)"
-        }}>The photos you<br />never knew<br />were being taken.</h2>
+        }}>Candid moments,<br />captured by everyone,<br />in the room.</h2>
+
         <p style={{
           color: "#a89070",
           fontSize: 16,
@@ -120,24 +121,28 @@ export default function Landing() {
           Guests scan a QR code and get a disposable camera on their phone.
           No app. No gallery. Candid moments, revealed when you're ready.
         </p>
-        <a href="/create" style={{
-          background: "#f5efe6",
-          color: "#1a1410",
-          padding: "16px 48px",
-          borderRadius: 3,
-          textDecoration: "none",
-          fontWeight: 400,
-          fontSize: 13,
-          display: "inline-block",
-          letterSpacing: 3,
-          textTransform: "uppercase"
-        }}>Create your event</a>
+        <button
+          onClick={scrollToPricing}
+          style={{
+            background: "#f5efe6",
+            color: "#1a1410",
+            padding: "16px 48px",
+            borderRadius: 3,
+            border: "none",
+            fontWeight: 400,
+            fontSize: 13,
+            display: "inline-block",
+            letterSpacing: 3,
+            textTransform: "uppercase",
+            cursor: "pointer",
+            fontFamily: "'Inter', sans-serif"
+          }}>Create your event</button>
         <p style={{
           color: "#a89070",
           fontSize: 12,
           marginTop: 20,
           letterSpacing: 1
-        }}>From £9.99 per event. No subscription</p>
+        }}>From £9.99 per event. No subscription.</p>
       </div>
 
       {/* Divider */}
@@ -167,7 +172,7 @@ export default function Landing() {
           textAlign: "center",
           color: "#c4a882",
           letterSpacing: 6,
-          fontSize: 10,
+          fontSize: 13,
           textTransform: "uppercase",
           marginBottom: 80,
           fontWeight: 300
@@ -219,10 +224,10 @@ export default function Landing() {
       </div>
 
       {/* Pricing */}
-      <div style={{
+      <div ref={pricingRef} style={{
         maxWidth: 960,
         margin: "0 auto",
-        padding: "100px 24px 120px",
+        padding: "100px 24px 60px",
         position: "relative",
         zIndex: 10
       }}>
@@ -230,7 +235,7 @@ export default function Landing() {
           textAlign: "center",
           color: "#c4a882",
           letterSpacing: 6,
-          fontSize: 10,
+          fontSize: 13,
           textTransform: "uppercase",
           marginBottom: 16,
           fontWeight: 300
@@ -246,7 +251,8 @@ export default function Landing() {
         <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: 16
+          gap: 16,
+          marginBottom: 24
         }}>
           {tiers.map(({ name, price, guests, shots, featured }) => (
             <div key={name} style={{
@@ -322,6 +328,54 @@ export default function Landing() {
             </div>
           ))}
         </div>
+
+        {/* Bespoke */}
+        <div style={{
+          textAlign: "center",
+          padding: "40px 24px",
+          border: "1px solid rgba(245,239,230,0.06)",
+          borderRadius: 6,
+          marginBottom: 24
+        }}>
+          <p style={{ color: "#c4a882", fontSize: 11, letterSpacing: 4, textTransform: "uppercase", marginBottom: 12, fontWeight: 300 }}>Bespoke</p>
+          <p style={{ color: "#a89070", fontSize: 14, marginBottom: 24, fontWeight: 300 }}>150+ guests or something more tailored? Get in touch and we'll put together a custom package.</p>
+          <button
+            onClick={() => document.getElementById("bespoke-form").scrollIntoView({ behavior: "smooth" })}
+            style={{
+              background: "transparent",
+              color: "#f5efe6",
+              border: "1px solid rgba(245,239,230,0.2)",
+              borderRadius: 3,
+              padding: "13px 32px",
+              fontSize: 11,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              cursor: "pointer",
+              fontFamily: "'Inter', sans-serif"
+            }}>Enquire about bespoke</button>
+        </div>
+      </div>
+
+      {/* Bespoke form */}
+      <div id="bespoke-form" style={{
+        maxWidth: 560,
+        margin: "0 auto",
+        padding: "0 24px 120px",
+        position: "relative",
+        zIndex: 10
+      }}>
+        <p style={{
+          textAlign: "center",
+          color: "#c4a882",
+          letterSpacing: 6,
+          fontSize: 13,
+          textTransform: "uppercase",
+          marginBottom: 16,
+          fontWeight: 300
+        }}>Bespoke enquiry</p>
+        <p style={{ textAlign: "center", color: "#a89070", fontSize: 13, marginBottom: 40, fontWeight: 300 }}>Tell us about your event and we'll get back to you within 24 hours.</p>
+
+        <BespokeForm />
       </div>
 
       {/* Footer */}
@@ -338,9 +392,103 @@ export default function Landing() {
         zIndex: 10
       }}>
         <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 300 }}>shoto</span>
-        <span>© 2025</span>
+        <a href="https://www.instagram.com/useshoto" target="_blank" rel="noopener noreferrer" style={{ color: "#a89070", textDecoration: "none", letterSpacing: 2 }}>useshoto</a>
+        <span>© 2026 est.</span>
       </div>
 
+    </div>
+  )
+}
+
+function BespokeForm() {
+  const [form, setForm] = useState({ name: "", email: "", occasion: "", guests: "", message: "" })
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+
+  function handleChange(e) {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  async function handleSubmit() {
+    if (!form.name || !form.email || !form.message) return
+    setSending(true)
+    try {
+      await fetch("/api/bespoke-enquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form)
+      })
+      setSent(true)
+    } catch (e) {
+      alert("Something went wrong. Please email us directly at hello@shoto.co.uk")
+    }
+    setSending(false)
+  }
+
+  const inputStyle = {
+    width: "100%",
+    padding: "12px 16px",
+    borderRadius: 6,
+    border: "1px solid rgba(245,239,230,0.15)",
+    background: "rgba(255,255,255,0.03)",
+    color: "#f5efe6",
+    fontSize: 14,
+    marginBottom: 16,
+    boxSizing: "border-box",
+    fontFamily: "'Inter', sans-serif"
+  }
+
+  const labelStyle = {
+    color: "#a89070",
+    fontSize: 11,
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    display: "block",
+    marginBottom: 8,
+    fontWeight: 300
+  }
+
+  if (sent) {
+    return (
+      <div style={{ textAlign: "center", padding: "40px 0" }}>
+        <p style={{ color: "#c4a882", fontSize: 13, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Message sent</p>
+        <p style={{ color: "#a89070", fontSize: 14, fontWeight: 300 }}>We will be in touch within 24 hours.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <label style={labelStyle}>Your name</label>
+      <input name="name" value={form.name} onChange={handleChange} placeholder="Full name" style={inputStyle} />
+      <label style={labelStyle}>Email</label>
+      <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="your@email.com" style={inputStyle} />
+      <label style={labelStyle}>Occasion</label>
+      <input name="occasion" value={form.occasion} onChange={handleChange} placeholder="e.g. Corporate event, festival" style={inputStyle} />
+      <label style={labelStyle}>Expected guest count</label>
+      <input name="guests" value={form.guests} onChange={handleChange} placeholder="e.g. 300" style={inputStyle} />
+      <label style={labelStyle}>Tell us about your event</label>
+      <textarea name="message" value={form.message} onChange={handleChange} placeholder="Any details that would help us put together the right package" rows={4} style={{ ...inputStyle, resize: "vertical" }} />
+      <button
+        onClick={handleSubmit}
+        disabled={sending || !form.name || !form.email || !form.message}
+        style={{
+          width: "100%",
+          padding: "14px",
+          borderRadius: 4,
+          border: "none",
+          background: form.name && form.email && form.message ? "#f5efe6" : "#2a2420",
+          color: form.name && form.email && form.message ? "#1a1410" : "#4a3f35",
+          fontSize: 12,
+          fontWeight: 500,
+          letterSpacing: 3,
+          textTransform: "uppercase",
+          cursor: form.name && form.email && form.message ? "pointer" : "not-allowed",
+          fontFamily: "'Inter', sans-serif"
+        }}
+      >
+        {sending ? "Sending..." : "Send enquiry"}
+      </button>
     </div>
   )
 }
