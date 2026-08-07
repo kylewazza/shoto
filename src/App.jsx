@@ -132,6 +132,7 @@ export default function App() {
     parseInt(localStorage.getItem(`shoto_count_${eventId}`) || "0")
   )
   const [photoLimit, setPhotoLimit] = useState(50)
+  const [eventName, setEventName] = useState("")
   const [guestLimitReached, setGuestLimitReached] = useState(false)
   const [sessionLoaded, setSessionLoaded] = useState(false)
   const inputRef = useRef(null)
@@ -144,13 +145,12 @@ export default function App() {
     try {
       const { data: eventData } = await supabase
         .from("events")
-        .select("photo_limit, guest_limit")
+        .select("photo_limit, guest_limit, name")
         .eq("id", eventId)
         .single()
 
-      if (eventData?.photo_limit) {
-        setPhotoLimit(eventData.photo_limit)
-      }
+      if (eventData?.photo_limit) setPhotoLimit(eventData.photo_limit)
+      if (eventData?.name) setEventName(eventData.name)
 
       const { data: existingSession } = await supabase
         .from("guest_sessions")
@@ -233,9 +233,19 @@ export default function App() {
           fontSize: 11,
           letterSpacing: 4,
           textTransform: "uppercase",
-          marginBottom: 48,
+          marginBottom: 24,
           fontWeight: 300
         }}>Your disposable camera</p>
+        {eventName && (
+          <p style={{
+            fontFamily: "'Playfair Display', serif",
+            fontStyle: "italic",
+            fontSize: 20,
+            color: "#f5efe6",
+            marginBottom: 24,
+            textAlign: "center"
+          }}>Welcome to {eventName}</p>
+        )}
         <p style={{ ...mutedStyle, marginBottom: 16, maxWidth: 280, textAlign: "center", lineHeight: 1.8 }}>
           You have <strong style={{ color: "#f5efe6" }}>{photoLimit} shots</strong> to use throughout the event.
         </p>
