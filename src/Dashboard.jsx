@@ -111,8 +111,6 @@ export default function Dashboard() {
     setDownloading(false)
   }
 
-  const guestUrl = `https://shoto.co.uk/camera?event=${eventId}`
-
   if (!eventId) {
     return (
       <div style={centreStyle}>
@@ -165,15 +163,6 @@ export default function Dashboard() {
           </p>
           <p style={{ color: "#a89070", fontSize: 12 }}>{revealDate} at {revealTime}</p>
         </div>
-
-        <div style={{ marginBottom: 32 }}>
-          <p style={{ color: "#a89070", marginBottom: 12, fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>Guest QR Code</p>
-          <div style={{ background: "#f5efe6", display: "inline-block", padding: 16, borderRadius: 8 }}>
-            <QRCodeSVG value={guestUrl} size={160} />
-          </div>
-        </div>
-
-        <p style={{ color: "#a89070", fontSize: 11 }}>Guests can still scan and take photos until the reveal.</p>
       </div>
     )
   }
@@ -185,19 +174,11 @@ export default function Dashboard() {
       color: "#f5efe6",
       fontFamily: "'Inter', sans-serif",
       padding: 24,
-      maxWidth: 960,
+      maxWidth: 1500,
       margin: "0 auto"
     }}>
       <h1 style={logoStyle}>shoto</h1>
-      {event && <p style={{ ...mutedStyle, marginBottom: 8, fontSize: 11, letterSpacing: 4, textTransform: "uppercase" }}>{event.name}</p>}
-      <p style={{ ...mutedStyle, marginBottom: 40 }}>Organiser Dashboard</p>
-
-      <div style={{ marginBottom: 40 }}>
-        <p style={{ color: "#a89070", marginBottom: 12, fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>Guest QR Code</p>
-        <div style={{ background: "#f5efe6", display: "inline-block", padding: 16, borderRadius: 8 }}>
-          <QRCodeSVG value={guestUrl} size={160} />
-        </div>
-      </div>
+      {event && <p style={{ ...mutedStyle, marginBottom: 32, fontSize: 11, letterSpacing: 4, textTransform: "uppercase" }}>{event.name}</p>}
 
       {loading ? (
         <p style={mutedStyle}>Loading photos...</p>
@@ -205,7 +186,7 @@ export default function Dashboard() {
         <p style={mutedStyle}>No photos yet.</p>
       ) : (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 24 }}>
             <p style={{ color: "#a89070", margin: 0 }}>{photos.length} photos</p>
             <button
               onClick={downloadAll}
