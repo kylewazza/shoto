@@ -25,26 +25,12 @@ export default function Success() {
   }
 
   const guestUrl = event ? `https://shoto.co.uk/camera?event=${event.id}` : ""
-  const dashboardUrl = event ? `https://shoto.co.uk/dashboard?event=${event.id}` : ""
-
-  const centreStyle = {
-    minHeight: "100vh",
-    background: "#1a1410",
-    color: "#f5efe6",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: "'Inter', sans-serif",
-    padding: 24,
-    textAlign: "center"
-  }
 
   if (loading) {
     return (
       <div style={centreStyle}>
-        <h1 style={{ letterSpacing: 4, fontSize: 18, fontWeight: 300, marginBottom: 32 }}>shoto</h1>
-        <p style={{ color: "#a89070" }}>Setting up your event...</p>
+        <h1 style={logoStyle}>shoto</h1>
+        <p style={mutedStyle}>Setting up your event...</p>
       </div>
     )
   }
@@ -52,50 +38,86 @@ export default function Success() {
   if (!event) {
     return (
       <div style={centreStyle}>
-        <h1 style={{ letterSpacing: 4, fontSize: 18, fontWeight: 300, marginBottom: 32 }}>shoto</h1>
-        <p style={{ color: "#a89070", marginBottom: 16 }}>Your payment was successful.</p>
-        <p style={{ color: "#a89070", fontSize: 13 }}>Check your email for your event details.</p>
+        <h1 style={logoStyle}>shoto</h1>
+        <p style={{ ...mutedStyle, marginBottom: 8 }}>Your payment was successful.</p>
+        <p style={mutedStyle}>Check your email for your event details.</p>
       </div>
     )
   }
 
   return (
-    <div style={{ ...centreStyle, justifyContent: "flex-start", paddingTop: 48 }}>
-      <h1 style={{ letterSpacing: 4, fontSize: 18, fontWeight: 300, marginBottom: 32 }}>shoto</h1>
+    <div style={{ ...centreStyle, justifyContent: "flex-start", paddingTop: 64 }}>
+      <h1 style={logoStyle}>shoto</h1>
 
-      <p style={{ color: "#c4a882", letterSpacing: 4, fontSize: 10, textTransform: "uppercase", marginBottom: 16, fontWeight: 300 }}>Payment successful</p>
-      <h2 style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontWeight: 400, fontSize: 28, marginBottom: 8 }}>{event.name}</h2>
-      <p style={{ color: "#a89070", fontSize: 13, marginBottom: 48 }}>
-        Gallery reveals on {new Date(event.reveal_at).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} at {new Date(event.reveal_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
-      </p>
+      <p style={{ color: "#c4a882", letterSpacing: 4, fontSize: 10, textTransform: "uppercase", marginBottom: 16, fontWeight: 300 }}>You're all set</p>
+      <h2 style={{
+        fontFamily: "'Playfair Display', serif",
+        fontStyle: "italic",
+        fontWeight: 400,
+        fontSize: 28,
+        marginBottom: 40,
+        textAlign: "center"
+      }}>{event.name}</h2>
 
-      <div style={{ marginBottom: 40 }}>
-        <p style={{ color: "#a89070", marginBottom: 12, fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>Guest QR Code</p>
-        <p style={{ color: "#a89070", fontSize: 12, marginBottom: 16 }}>Print or display this at your event</p>
-        <div style={{ background: "#f5efe6", display: "inline-block", padding: 20, borderRadius: 8 }}>
-          <QRCodeSVG value={guestUrl} size={200} />
-        </div>
+      <div style={{
+        background: "rgba(255,255,255,0.02)",
+        border: "1px solid rgba(245,239,230,0.08)",
+        borderRadius: 8,
+        padding: "32px 40px",
+        textAlign: "center",
+        marginBottom: 40,
+        maxWidth: 420,
+        width: "100%"
+      }}>
+        <p style={{ color: "#c4a882", fontSize: 11, letterSpacing: 4, textTransform: "uppercase", marginBottom: 16, fontWeight: 300 }}>Check your email</p>
+        <p style={{ color: "#a89070", fontSize: 14, lineHeight: 1.8, marginBottom: 0, fontWeight: 300 }}>
+          Your QR code has been sent to your email as an attachment. Print it and display it at your event so guests can scan it on the day.
+        </p>
       </div>
 
       <div style={{
         background: "rgba(255,255,255,0.02)",
-        borderRadius: 8,
-        padding: 24,
-        textAlign: "left",
-        marginBottom: 24,
         border: "1px solid rgba(245,239,230,0.08)",
-        width: "100%",
-        maxWidth: 480
+        borderRadius: 8,
+        padding: "32px 40px",
+        textAlign: "center",
+        marginBottom: 40,
+        maxWidth: 420,
+        width: "100%"
       }}>
-        <p style={{ color: "#a89070", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", margin: "0 0 6px" }}>Guest link</p>
-        <p style={{ fontSize: 13, wordBreak: "break-all", margin: "0 0 20px", color: "#f5efe6" }}>{guestUrl}</p>
-        <p style={{ color: "#a89070", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", margin: "0 0 6px" }}>Your dashboard — keep this private</p>
-        <p style={{ fontSize: 13, wordBreak: "break-all", margin: 0, color: "#f5efe6" }}>{dashboardUrl}</p>
+        <p style={{ color: "#c4a882", fontSize: 11, letterSpacing: 4, textTransform: "uppercase", marginBottom: 16, fontWeight: 300 }}>Your gallery reveal</p>
+        <p style={{ color: "#a89070", fontSize: 14, lineHeight: 1.8, fontWeight: 300 }}>
+          After your event, you'll receive a second email with your private gallery link. Your photos will be waiting.
+        </p>
       </div>
 
-      <p style={{ color: "#a89070", fontSize: 11, letterSpacing: 1, maxWidth: 400 }}>
-        These details have also been sent to your email. Save your dashboard link — you will need it to view photos after the reveal.
-      </p>
+      <p style={{ color: "#a89070", fontSize: 13, fontStyle: "italic", marginTop: 8 }}>Enjoy every moment, Shoto</p>
     </div>
   )
+}
+
+const centreStyle = {
+  minHeight: "100vh",
+  background: "#1a1410",
+  color: "#f5efe6",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  fontFamily: "'Inter', sans-serif",
+  padding: 24,
+  textAlign: "center"
+}
+
+const logoStyle = {
+  letterSpacing: 4,
+  fontSize: 18,
+  fontWeight: 300,
+  marginBottom: 32
+}
+
+const mutedStyle = {
+  color: "#a89070",
+  fontSize: 14,
+  fontWeight: 300
 }
