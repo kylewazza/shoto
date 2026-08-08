@@ -97,14 +97,6 @@ function applyFilmFilter(file) {
       ctx.fillStyle = leak2
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      const streak = ctx.createLinearGradient(0, 0, canvas.width, 0)
-      streak.addColorStop(0, "rgba(255, 100, 40, 0.35)")
-      streak.addColorStop(0.25, "rgba(255, 140, 60, 0.15)")
-      streak.addColorStop(0.6, "rgba(255, 80, 40, 0.08)")
-      streak.addColorStop(1, "rgba(255, 80, 20, 0.3)")
-      ctx.fillStyle = streak
-      ctx.fillRect(0, 0, canvas.width, canvas.height * 0.22)
-
       const now = new Date()
       const day = String(now.getDate()).padStart(2, "0")
       const month = String(now.getMonth() + 1).padStart(2, "0")
