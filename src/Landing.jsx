@@ -1,4 +1,61 @@
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
+
+function CookieNotice() {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    if (!localStorage.getItem("shoto_cookies_accepted")) {
+      setVisible(true)
+    }
+  }, [])
+
+  function accept() {
+    localStorage.setItem("shoto_cookies_accepted", "true")
+    setVisible(false)
+  }
+
+  if (!visible) return null
+
+  return (
+    <div style={{
+      position: "fixed",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      background: "#111008",
+      borderTop: "1px solid rgba(245,239,230,0.08)",
+      padding: "16px 24px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 16,
+      zIndex: 999,
+      flexWrap: "wrap"
+    }}>
+      <p style={{ color: "#a89070", fontSize: 12, margin: 0, fontFamily: "'Inter', sans-serif", lineHeight: 1.6 }}>
+        We use cookies and local storage to provide our service. See our <a href="/privacy" style={{ color: "#c4a882" }}>Privacy Policy</a> for details.
+      </p>
+      <button
+        onClick={accept}
+        style={{
+          background: "#f5efe6",
+          color: "#1a1410",
+          border: "none",
+          borderRadius: 3,
+          padding: "8px 20px",
+          fontSize: 11,
+          letterSpacing: 2,
+          textTransform: "uppercase",
+          cursor: "pointer",
+          fontFamily: "'Inter', sans-serif",
+          whiteSpace: "nowrap"
+        }}
+      >
+        Got it
+      </button>
+    </div>
+  )
+}
 
 export default function Landing() {
   const pricingRef = useRef(null)
@@ -389,12 +446,17 @@ export default function Landing() {
         fontSize: 11,
         letterSpacing: 2,
         position: "relative",
-        zIndex: 10
+        zIndex: 10,
+        flexWrap: "wrap",
+        gap: 12
       }}>
         <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 300 }}>shoto</span>
         <a href="https://www.instagram.com/useshoto" target="_blank" rel="noopener noreferrer" style={{ color: "#a89070", textDecoration: "none", letterSpacing: 2 }}>useshoto</a>
+        <a href="/privacy" style={{ color: "#a89070", textDecoration: "none", letterSpacing: 2 }}>Privacy Policy</a>
         <span>© 2026 est.</span>
       </div>
+
+      <CookieNotice />
 
     </div>
   )
@@ -412,6 +474,7 @@ function BespokeForm() {
   async function handleSubmit() {
     if (!form.name || !form.email || !form.message) return
     setSending(true)
+
     try {
       await fetch("/api/bespoke-enquiry", {
         method: "POST",
@@ -420,7 +483,7 @@ function BespokeForm() {
       })
       setSent(true)
     } catch (e) {
-      alert("Something went wrong. Please email us directly at hello@shoto.co.uk")
+      alert("Something went wrong. Please email us directly at kylewilliamsmedia@gmail.com")
     }
     setSending(false)
   }
@@ -461,14 +524,26 @@ function BespokeForm() {
     <div>
       <label style={labelStyle}>Your name</label>
       <input name="name" value={form.name} onChange={handleChange} placeholder="Full name" style={inputStyle} />
+
       <label style={labelStyle}>Email</label>
       <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="your@email.com" style={inputStyle} />
+
       <label style={labelStyle}>Occasion</label>
       <input name="occasion" value={form.occasion} onChange={handleChange} placeholder="e.g. Corporate event, festival" style={inputStyle} />
+
       <label style={labelStyle}>Expected guest count</label>
       <input name="guests" value={form.guests} onChange={handleChange} placeholder="e.g. 300" style={inputStyle} />
+
       <label style={labelStyle}>Tell us about your event</label>
-      <textarea name="message" value={form.message} onChange={handleChange} placeholder="Any details that would help us put together the right package" rows={4} style={{ ...inputStyle, resize: "vertical" }} />
+      <textarea
+        name="message"
+        value={form.message}
+        onChange={handleChange}
+        placeholder="Any details that would help us put together the right package"
+        rows={4}
+        style={{ ...inputStyle, resize: "vertical" }}
+      />
+
       <button
         onClick={handleSubmit}
         disabled={sending || !form.name || !form.email || !form.message}

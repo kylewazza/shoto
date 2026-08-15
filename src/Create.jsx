@@ -220,7 +220,7 @@ export default function Create() {
         </button>
 
         <p style={{ color: "#a89070", fontSize: 11, textAlign: "center", marginTop: 16 }}>
-          Secure payment via Stripe
+          Secure payment via Stripe. By purchasing you agree to our <a href="/privacy" style={{ color: "#a89070" }}>Privacy Policy</a>.
         </p>
       </div>
     </div>

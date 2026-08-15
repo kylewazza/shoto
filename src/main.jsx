@@ -6,6 +6,7 @@ import Dashboard from "./Dashboard"
 import Create from "./Create"
 import Landing from "./Landing"
 import Success from "./Success"
+import Privacy from "./Privacy"
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -16,6 +17,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/create" element={<Create />} />
         <Route path="/success" element={<Success />} />
+        <Route path="/privacy" element={<Privacy />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>
