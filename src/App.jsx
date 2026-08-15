@@ -216,6 +216,14 @@ export default function App() {
     )
   }
 
+  if (!sessionLoaded) {
+    return (
+      <div style={centreStyle}>
+        <h1 style={logoStyle}>shoto</h1>
+      </div>
+    )
+  }
+
   if (!started) {
     return (
       <div style={centreStyle}>
@@ -239,7 +247,7 @@ export default function App() {
           }}>Welcome to {eventName}</p>
         )}
         <p style={{ ...mutedStyle, marginBottom: 16, maxWidth: 280, textAlign: "center", lineHeight: 1.8 }}>
-          You have <strong style={{ color: "#f5efe6" }}>{photoLimit} shots</strong> to use throughout the event.
+          You have <strong style={{ color: "#f5efe6" }}>{shotsLeft} shots</strong> remaining.
         </p>
         <p style={{ ...mutedStyle, marginBottom: 48, maxWidth: 280, textAlign: "center", lineHeight: 1.8 }}>
           Photos won't be visible until after the event. Just like a real disposable camera.
