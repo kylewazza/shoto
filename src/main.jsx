@@ -7,6 +7,7 @@ import Create from "./Create"
 import Landing from "./Landing"
 import Success from "./Success"
 import Privacy from "./Privacy"
+import Promise from "./Promise"
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -18,6 +19,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="/create" element={<Create />} />
         <Route path="/success" element={<Success />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/promise" element={<Promise />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>
