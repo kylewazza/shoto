@@ -120,14 +120,20 @@ export default function App() {
   const deviceId = getDeviceId()
   const [uploading, setUploading] = useState(false)
   const [started, setStarted] = useState(false)
+  const [username, setUsername] = useState("")
+  const [consented, setConsented] = useState(false)
   const [shotCount, setShotCount] = useState(
     parseInt(localStorage.getItem(`shoto_count_${eventId}`) || "0")
   )
   const [photoLimit, setPhotoLimit] = useState(50)
   const [eventName, setEventName] = useState("")
+  const [requireUsername, setRequireUsername] = useState(false)
+  const [requireConsent, setRequireConsent] = useState(false)
+  const [allowGallery, setAllowGallery] = useState(false)
   const [guestLimitReached, setGuestLimitReached] = useState(false)
   const [sessionLoaded, setSessionLoaded] = useState(false)
   const inputRef = useRef(null)
+  const galleryRef = useRef(null)
 
   useEffect(() => {
     if (eventId) loadSession()
@@ -137,12 +143,15 @@ export default function App() {
     try {
       const { data: eventData } = await supabase
         .from("events")
-        .select("photo_limit, guest_limit, name")
+        .select("photo_limit, guest_limit, name, require_username, require_consent, allow_gallery_upload")
         .eq("id", eventId)
         .single()
 
       if (eventData?.photo_limit) setPhotoLimit(eventData.photo_limit)
       if (eventData?.name) setEventName(eventData.name)
+      if (eventData?.require_username) setRequireUsername(eventData.require_username)
+      if (eventData?.require_consent) setRequireConsent(eventData.require_consent)
+      if (eventData?.allow_gallery_upload) setAllowGallery(eventData.allow_gallery_upload)
 
       const { data: existingSession } = await supabase
         .from("guest_sessions")
@@ -182,11 +191,59 @@ export default function App() {
         event_id: eventId,
         device_id: deviceId,
         shot_count: newCount,
+        username: username || null,
         updated_at: new Date().toISOString()
       }, { onConflict: "event_id,device_id" })
   }
 
+  async function handleCapture(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    await uploadFile(file)
+  }
+
+  async function uploadFile(file) {
+    if (shotCount >= photoLimit) {
+      alert("You've used all your shots!")
+      return
+    }
+
+    setUploading(true)
+
+    try {
+      let fileToUpload = file
+
+      if (file.type.startsWith("image/")) {
+        const filtered = await applyFilmFilter(file)
+        fileToUpload = await imageCompression(filtered, {
+          maxSizeMB: 0.3,
+          maxWidthOrHeight: 1920,
+        })
+      }
+
+      const ext = file.type.startsWith("video/") ? "mp4" : "jpg"
+      const path = `${eventId}/${deviceId}_${Date.now()}.${ext}`
+      const { error } = await supabase.storage
+        .from("photos")
+        .upload(path, fileToUpload)
+
+      if (error) throw error
+
+      const newCount = shotCount + 1
+      localStorage.setItem(`shoto_count_${eventId}`, newCount)
+      setShotCount(newCount)
+      await updateSession(newCount)
+    } catch (err) {
+      console.error(err)
+      alert("Something went wrong, try again.")
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const shotsLeft = photoLimit - shotCount
+
+  const canStart = username.trim().length > 0 && (requireConsent ? consented : true)
 
   if (!eventId) {
     return (
@@ -201,14 +258,7 @@ export default function App() {
     return (
       <div style={centreStyle}>
         <h1 style={logoStyle}>shoto</h1>
-        <p style={{
-          color: "#c4a882",
-          fontSize: 11,
-          letterSpacing: 4,
-          textTransform: "uppercase",
-          marginBottom: 32,
-          fontWeight: 300
-        }}>Event full</p>
+        <p style={{ color: "#c4a882", fontSize: 11, letterSpacing: 4, textTransform: "uppercase", marginBottom: 32, fontWeight: 300 }}>Event full</p>
         <p style={{ ...mutedStyle, textAlign: "center", maxWidth: 280, lineHeight: 1.8 }}>
           This event has reached its guest limit. No more cameras are available.
         </p>
@@ -228,35 +278,65 @@ export default function App() {
     return (
       <div style={centreStyle}>
         <h1 style={logoStyle}>shoto</h1>
-        <p style={{
-          color: "#c4a882",
-          fontSize: 11,
-          letterSpacing: 4,
-          textTransform: "uppercase",
-          marginBottom: 24,
-          fontWeight: 300
-        }}>Your disposable camera</p>
+        <p style={{ color: "#c4a882", fontSize: 11, letterSpacing: 4, textTransform: "uppercase", marginBottom: 24, fontWeight: 300 }}>Your disposable camera</p>
+
         {eventName && (
-          <p style={{
-            fontFamily: "'Playfair Display', serif",
-            fontStyle: "italic",
-            fontSize: 20,
-            color: "#f5efe6",
-            marginBottom: 24,
-            textAlign: "center"
-          }}>Welcome to {eventName}</p>
+          <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontSize: 20, color: "#f5efe6", marginBottom: 24, textAlign: "center" }}>
+            Welcome to {eventName}
+          </p>
         )}
-        <p style={{ ...mutedStyle, marginBottom: 16, maxWidth: 280, textAlign: "center", lineHeight: 1.8 }}>
+
+        <p style={{ ...mutedStyle, marginBottom: 24, maxWidth: 280, textAlign: "center", lineHeight: 1.8 }}>
           You have <strong style={{ color: "#f5efe6" }}>{shotsLeft} shots</strong> remaining.
         </p>
-        <p style={{ ...mutedStyle, marginBottom: 48, maxWidth: 280, textAlign: "center", lineHeight: 1.8 }}>
+
+        <p style={{ ...mutedStyle, marginBottom: 32, maxWidth: 280, textAlign: "center", lineHeight: 1.8 }}>
           Photos won't be visible until after the event. Just like a real disposable camera.
         </p>
+
+        {requireUsername && (
+          <div style={{ width: "100%", maxWidth: 280, marginBottom: 16 }}>
+            <input
+              type="text"
+              placeholder="Your name or Instagram @"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                borderRadius: 6,
+                border: "1px solid rgba(245,239,230,0.2)",
+                background: "rgba(255,255,255,0.05)",
+                color: "#f5efe6",
+                fontSize: 14,
+                boxSizing: "border-box",
+                fontFamily: "sans-serif"
+              }}
+            />
+          </div>
+        )}
+
+        {requireConsent && (
+          <div style={{ width: "100%", maxWidth: 280, marginBottom: 24, display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <input
+              type="checkbox"
+              id="consent"
+              checked={consented}
+              onChange={(e) => setConsented(e.target.checked)}
+              style={{ marginTop: 3, cursor: "pointer", flexShrink: 0 }}
+            />
+            <label htmlFor="consent" style={{ color: "#a89070", fontSize: 12, lineHeight: 1.6, cursor: "pointer" }}>
+              I agree to my photos and videos being shared and used for promotional purposes on social media.
+            </label>
+          </div>
+        )}
+
         <button
-          onClick={() => setStarted(true)}
+          onClick={() => { if (canStart || (!requireUsername && !requireConsent)) setStarted(true) }}
+          disabled={requireUsername && !canStart}
           style={{
-            background: "#f5efe6",
-            color: "#1a1410",
+            background: (requireUsername && !canStart) ? "#2a2420" : "#f5efe6",
+            color: (requireUsername && !canStart) ? "#4a3f35" : "#1a1410",
             border: "none",
             borderRadius: 4,
             padding: "16px 48px",
@@ -264,49 +344,13 @@ export default function App() {
             fontWeight: 500,
             letterSpacing: 3,
             textTransform: "uppercase",
-            cursor: "pointer"
+            cursor: (requireUsername && !canStart) ? "not-allowed" : "pointer"
           }}
         >
           Start shooting
         </button>
       </div>
     )
-  }
-
-  async function handleCapture(e) {
-    const file = e.target.files[0]
-    if (!file) return
-    if (shotCount >= photoLimit) {
-      alert("You've used all your shots!")
-      return
-    }
-
-    setUploading(true)
-
-    try {
-      const filtered = await applyFilmFilter(file)
-      const compressed = await imageCompression(filtered, {
-        maxSizeMB: 0.3,
-        maxWidthOrHeight: 1920,
-      })
-
-      const path = `${eventId}/${deviceId}_${Date.now()}.jpg`
-      const { error } = await supabase.storage
-        .from("photos")
-        .upload(path, compressed)
-
-      if (error) throw error
-
-      const newCount = shotCount + 1
-      localStorage.setItem(`shoto_count_${eventId}`, newCount)
-      setShotCount(newCount)
-      await updateSession(newCount)
-    } catch (err) {
-      console.error(err)
-      alert("Something went wrong, try again.")
-    } finally {
-      setUploading(false)
-    }
   }
 
   return (
@@ -318,14 +362,26 @@ export default function App() {
           <p style={{ ...mutedStyle, marginBottom: 40 }}>
             {shotsLeft} shot{shotsLeft !== 1 ? "s" : ""} remaining
           </p>
+
           <input
             ref={inputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,video/*"
             capture="environment"
             style={{ display: "none" }}
             onChange={handleCapture}
           />
+
+          {allowGallery && (
+            <input
+              ref={galleryRef}
+              type="file"
+              accept="image/*,video/*"
+              style={{ display: "none" }}
+              onChange={handleCapture}
+            />
+          )}
+
           <button
             onClick={() => inputRef.current.click()}
             disabled={uploading}
@@ -338,10 +394,33 @@ export default function App() {
               height: 80,
               fontSize: 32,
               cursor: uploading ? "not-allowed" : "pointer",
+              marginBottom: allowGallery ? 16 : 0
             }}
           >
             {uploading ? "..." : "📷"}
           </button>
+
+          {allowGallery && (
+            <button
+              onClick={() => galleryRef.current.click()}
+              disabled={uploading}
+              style={{
+                background: "transparent",
+                color: "#f5efe6",
+                border: "1px solid rgba(245,239,230,0.2)",
+                borderRadius: 4,
+                padding: "10px 24px",
+                fontSize: 11,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                cursor: uploading ? "not-allowed" : "pointer",
+                fontFamily: "sans-serif"
+              }}
+            >
+              Upload from gallery
+            </button>
+          )}
+
           {uploading && (
             <p style={{ ...mutedStyle, marginTop: 20 }}>Developing...</p>
           )}
