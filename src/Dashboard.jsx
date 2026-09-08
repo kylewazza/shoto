@@ -2,7 +2,6 @@ import { useState, useEffect } from "react"
 import { supabase } from "./lib/supabase"
 import JSZip from "jszip"
 import { saveAs } from "file-saver"
-import { QRCodeSVG } from "qrcode.react"
 
 function getEventId() {
   const params = new URLSearchParams(window.location.search)
@@ -43,6 +42,7 @@ export default function Dashboard() {
   const eventId = getEventId()
   const [event, setEvent] = useState(null)
   const [photos, setPhotos] = useState([])
+  const [sessions, setSessions] = useState({})
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(false)
   const [revealed, setRevealed] = useState(false)
@@ -72,9 +72,23 @@ export default function Dashboard() {
     if (now >= revealTime) {
       setRevealed(true)
       await loadPhotos()
+      await loadSessions()
     }
 
     setLoading(false)
+  }
+
+  async function loadSessions() {
+    const { data } = await supabase
+      .from("guest_sessions")
+      .select("device_id, username")
+      .eq("event_id", eventId)
+
+    if (data) {
+      const map = {}
+      data.forEach(s => { if (s.username) map[s.device_id] = s.username })
+      setSessions(map)
+    }
   }
 
   async function loadPhotos() {
@@ -88,7 +102,8 @@ export default function Dashboard() {
       const { data: urlData } = supabase.storage
         .from("photos")
         .getPublicUrl(`${eventId}/${file.name}`)
-      return { url: urlData.publicUrl, name: file.name }
+      const deviceId = file.name.split("_")[0]
+      return { url: urlData.publicUrl, name: file.name, deviceId }
     })
 
     setPhotos(urls)
@@ -174,7 +189,7 @@ export default function Dashboard() {
       color: "#f5efe6",
       fontFamily: "'Inter', sans-serif",
       padding: 24,
-      maxWidth: 1500,
+      maxWidth: 1400,
       margin: "0 auto"
     }}>
       <h1 style={logoStyle}>shoto</h1>
@@ -212,18 +227,33 @@ export default function Dashboard() {
             gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
             gap: 8
           }}>
-            {photos.map(({ url }, i) => (
-              <img
-                key={i}
-                src={url}
-                alt=""
-                style={{
-                  width: "100%",
-                  aspectRatio: "1",
-                  objectFit: "cover",
-                  borderRadius: 4,
-                }}
-              />
+            {photos.map(({ url, name, deviceId }) => (
+              <div key={name} style={{ position: "relative" }}>
+                <img
+                  src={url}
+                  alt=""
+                  style={{
+                    width: "100%",
+                    aspectRatio: "1",
+                    objectFit: "cover",
+                    borderRadius: 4,
+                    display: "block"
+                  }}
+                />
+                {sessions[deviceId] && (
+                  <p style={{
+                    position: "absolute",
+                    bottom: 6,
+                    left: 6,
+                    background: "rgba(0,0,0,0.6)",
+                    color: "#f5efe6",
+                    fontSize: 10,
+                    padding: "2px 6px",
+                    borderRadius: 3,
+                    margin: 0
+                  }}>{sessions[deviceId]}</p>
+                )}
+              </div>
             ))}
           </div>
         </>
