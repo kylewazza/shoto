@@ -366,8 +366,8 @@ export default function App() {
           <input
             ref={inputRef}
             type="file"
-            accept="image/*,video/*"
-            capture="environment"
+            accept="image/*"
+capture="environment"
             style={{ display: "none" }}
             onChange={handleCapture}
           />
