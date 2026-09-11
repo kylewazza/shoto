@@ -115,6 +115,27 @@ function applyFilmFilter(file) {
   })
 }
 
+function checkVideoDuration(file, maxSeconds = 5) {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video")
+    video.preload = "metadata"
+    const url = URL.createObjectURL(file)
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(url)
+      if (video.duration > maxSeconds) {
+        reject(new Error(`Video must be ${maxSeconds} seconds or less.`))
+      } else {
+        resolve()
+      }
+    }
+    video.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error("Could not read video file."))
+    }
+    video.src = url
+  })
+}
+
 export default function App() {
   const eventId = getEventId()
   const deviceId = getDeviceId()
@@ -196,12 +217,6 @@ export default function App() {
       }, { onConflict: "event_id,device_id" })
   }
 
-  async function handleCapture(e) {
-    const file = e.target.files[0]
-    if (!file) return
-    await uploadFile(file)
-  }
-
   async function uploadFile(file) {
     if (shotCount >= photoLimit) {
       alert("You've used all your shots!")
@@ -211,9 +226,21 @@ export default function App() {
     setUploading(true)
 
     try {
+      const isVideo = file.type.startsWith("video/")
+
+      if (isVideo) {
+        try {
+          await checkVideoDuration(file, 5)
+        } catch (err) {
+          alert(err.message)
+          setUploading(false)
+          return
+        }
+      }
+
       let fileToUpload = file
 
-      if (file.type.startsWith("image/")) {
+      if (!isVideo) {
         const filtered = await applyFilmFilter(file)
         fileToUpload = await imageCompression(filtered, {
           maxSizeMB: 0.3,
@@ -221,7 +248,7 @@ export default function App() {
         })
       }
 
-      const ext = file.type.startsWith("video/") ? "mp4" : "jpg"
+      const ext = isVideo ? (file.name.split(".").pop() || "mp4") : "jpg"
       const path = `${eventId}/${deviceId}_${Date.now()}.${ext}`
       const { error } = await supabase.storage
         .from("photos")
@@ -241,9 +268,14 @@ export default function App() {
     }
   }
 
-  const shotsLeft = photoLimit - shotCount
+  async function handleCapture(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    await uploadFile(file)
+  }
 
-  const canStart = username.trim().length > 0 && (requireConsent ? consented : true)
+  const shotsLeft = photoLimit - shotCount
+  const canStart = !requireUsername || (username.trim().length > 0 && (requireConsent ? consented : true))
 
   if (!eventId) {
     return (
@@ -332,11 +364,11 @@ export default function App() {
         )}
 
         <button
-          onClick={() => { if (canStart || (!requireUsername && !requireConsent)) setStarted(true) }}
-          disabled={requireUsername && !canStart}
+          onClick={() => { if (canStart) setStarted(true) }}
+          disabled={!canStart}
           style={{
-            background: (requireUsername && !canStart) ? "#2a2420" : "#f5efe6",
-            color: (requireUsername && !canStart) ? "#4a3f35" : "#1a1410",
+            background: canStart ? "#f5efe6" : "#2a2420",
+            color: canStart ? "#1a1410" : "#4a3f35",
             border: "none",
             borderRadius: 4,
             padding: "16px 48px",
@@ -344,7 +376,7 @@ export default function App() {
             fontWeight: 500,
             letterSpacing: 3,
             textTransform: "uppercase",
-            cursor: (requireUsername && !canStart) ? "not-allowed" : "pointer"
+            cursor: canStart ? "pointer" : "not-allowed"
           }}
         >
           Start shooting
@@ -367,7 +399,7 @@ export default function App() {
             ref={inputRef}
             type="file"
             accept="image/*"
-capture="environment"
+            capture="environment"
             style={{ display: "none" }}
             onChange={handleCapture}
           />

@@ -103,7 +103,8 @@ export default function Dashboard() {
         .from("photos")
         .getPublicUrl(`${eventId}/${file.name}`)
       const deviceId = file.name.split("_")[0]
-      return { url: urlData.publicUrl, name: file.name, deviceId }
+      const isVideo = file.name.endsWith(".mp4") || file.name.endsWith(".mov") || file.name.endsWith(".webm")
+      return { url: urlData.publicUrl, name: file.name, deviceId, isVideo }
     })
 
     setPhotos(urls)
@@ -227,19 +228,34 @@ export default function Dashboard() {
             gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
             gap: 8
           }}>
-            {photos.map(({ url, name, deviceId }) => (
+            {photos.map(({ url, name, deviceId, isVideo }) => (
               <div key={name} style={{ position: "relative" }}>
-                <img
-                  src={url}
-                  alt=""
-                  style={{
-                    width: "100%",
-                    aspectRatio: "1",
-                    objectFit: "cover",
-                    borderRadius: 4,
-                    display: "block"
-                  }}
-                />
+                {isVideo ? (
+                  <video
+                    src={url}
+                    controls
+                    playsInline
+                    style={{
+                      width: "100%",
+                      aspectRatio: "1",
+                      objectFit: "cover",
+                      borderRadius: 4,
+                      display: "block"
+                    }}
+                  />
+                ) : (
+                  <img
+                    src={url}
+                    alt=""
+                    style={{
+                      width: "100%",
+                      aspectRatio: "1",
+                      objectFit: "cover",
+                      borderRadius: 4,
+                      display: "block"
+                    }}
+                  />
+                )}
                 {sessions[deviceId] && (
                   <p style={{
                     position: "absolute",
