@@ -123,7 +123,7 @@ function checkVideoDuration(file, maxSeconds = 5) {
     video.onloadedmetadata = () => {
       URL.revokeObjectURL(url)
       if (video.duration > maxSeconds) {
-        reject(new Error(`Video must be ${maxSeconds} seconds or less.`))
+        reject(new Error(`Video too long. Please record a clip of 5 seconds or less and try again.`))
       } else {
         resolve()
       }
@@ -407,16 +407,6 @@ export default function App() {
             onChange={handleCapture}
           />
 
-          {allowGallery && (
-            <input
-              ref={galleryRef}
-              type="file"
-              accept="image/*,video/*"
-              style={{ display: "none" }}
-              onChange={handleCapture}
-            />
-          )}
-
           {allowVideo && (
             <input
               ref={videoRef}
@@ -428,44 +418,57 @@ export default function App() {
             />
           )}
 
-          <button
-            onClick={() => inputRef.current.click()}
-            disabled={uploading}
-            style={{
-              background: uploading ? "#333" : "#fff",
-              color: "#111",
-              border: "none",
-              borderRadius: 50,
-              width: 80,
-              height: 80,
-              fontSize: 32,
-              cursor: uploading ? "not-allowed" : "pointer",
-              marginBottom: (allowGallery || allowVideo) ? 16 : 0
-            }}
-          >
-            {uploading ? "..." : "📷"}
-          </button>
+          {allowGallery && (
+            <input
+              ref={galleryRef}
+              type="file"
+              accept="image/*,video/*"
+              style={{ display: "none" }}
+              onChange={handleCapture}
+            />
+          )}
 
-          {allowVideo && (
+          <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: (allowGallery || allowVideo) ? 16 : 0 }}>
             <button
-              onClick={() => videoRef.current.click()}
+              onClick={() => inputRef.current.click()}
               disabled={uploading}
               style={{
-                background: "transparent",
-                color: "#f5efe6",
-                border: "1px solid rgba(245,239,230,0.2)",
-                borderRadius: 4,
-                padding: "10px 24px",
-                fontSize: 11,
-                letterSpacing: 2,
-                textTransform: "uppercase",
+                background: uploading ? "#333" : "#fff",
+                color: "#111",
+                border: "none",
+                borderRadius: 50,
+                width: 80,
+                height: 80,
+                fontSize: 32,
                 cursor: uploading ? "not-allowed" : "pointer",
-                fontFamily: "sans-serif",
-                marginBottom: allowGallery ? 8 : 0
               }}
             >
-              Record video
+              {uploading ? "..." : "📷"}
             </button>
+
+            {allowVideo && (
+              <button
+                onClick={() => videoRef.current.click()}
+                disabled={uploading}
+                title="Record a 5 second clip"
+                style={{
+                  background: uploading ? "#333" : "#fff",
+                  color: "#111",
+                  border: "none",
+                  borderRadius: 50,
+                  width: 80,
+                  height: 80,
+                  fontSize: 32,
+                  cursor: uploading ? "not-allowed" : "pointer",
+                }}
+              >
+                {uploading ? "..." : "🎥"}
+              </button>
+            )}
+          </div>
+
+          {allowVideo && (
+            <p style={{ ...mutedStyle, fontSize: 11, marginBottom: 8 }}>🎥 Record a 5 second clip</p>
           )}
 
           {allowGallery && (
