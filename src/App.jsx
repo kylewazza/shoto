@@ -355,9 +355,25 @@ export default function App() {
           You have <strong style={{ color: "#f5efe6" }}>{shotsLeft} shots</strong> remaining.
         </p>
 
-        <p style={{ ...mutedStyle, marginBottom: 32, maxWidth: 280, textAlign: "center", lineHeight: 1.8 }}>
+        <p style={{ ...mutedStyle, marginBottom: 24, maxWidth: 280, textAlign: "center", lineHeight: 1.8 }}>
           Photos won't be visible until after the event. Just like a real disposable camera.
         </p>
+
+        <div style={{
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(245,239,230,0.08)",
+          borderRadius: 6,
+          padding: "12px 16px",
+          maxWidth: 280,
+          marginBottom: 32,
+          textAlign: "left"
+        }}>
+          <p style={{ color: "#c4a882", fontSize: 10, letterSpacing: 3, textTransform: "uppercase", marginBottom: 4, fontWeight: 300 }}>Tip</p>
+          <p style={{ color: "#a89070", fontSize: 12, lineHeight: 1.6, margin: 0 }}>
+            Add this page to your home screen for easy access throughout the event.
+            On iPhone tap the share icon then "Add to Home Screen". On Android tap the menu then "Add to Home Screen".
+          </p>
+        </div>
 
         {requireUsername && (
           <div style={{ width: "100%", maxWidth: 280, marginBottom: 16 }}>
