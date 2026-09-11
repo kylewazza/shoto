@@ -45,6 +45,7 @@ export default function Dashboard() {
   const [sessions, setSessions] = useState({})
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(false)
+  const [downloadingClean, setDownloadingClean] = useState(false)
   const [revealed, setRevealed] = useState(false)
 
   useEffect(() => {
@@ -127,6 +128,32 @@ export default function Dashboard() {
     setDownloading(false)
   }
 
+  async function downloadClean() {
+    setDownloadingClean(true)
+    const zip = new JSZip()
+
+    const { data: cleanFiles } = await supabase.storage
+      .from("photos-clean")
+      .list(eventId, { sortBy: { column: "created_at", order: "desc" } })
+
+    if (cleanFiles && cleanFiles.length > 0) {
+      await Promise.all(
+        cleanFiles.map(async (file) => {
+          const { data: urlData } = supabase.storage
+            .from("photos-clean")
+            .getPublicUrl(`${eventId}/${file.name}`)
+          const response = await fetch(urlData.publicUrl)
+          const blob = await response.blob()
+          zip.file(file.name, blob)
+        })
+      )
+    }
+
+    const content = await zip.generateAsync({ type: "blob" })
+    saveAs(content, `shoto-clean-${eventId}.zip`)
+    setDownloadingClean(false)
+  }
+
   if (!eventId) {
     return (
       <div style={centreStyle}>
@@ -202,7 +229,7 @@ export default function Dashboard() {
         <p style={mutedStyle}>No photos yet.</p>
       ) : (
         <>
-          <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
             <p style={{ color: "#a89070", margin: 0 }}>{photos.length} photos</p>
             <button
               onClick={downloadAll}
@@ -220,7 +247,25 @@ export default function Dashboard() {
                 textTransform: "uppercase"
               }}
             >
-              {downloading ? "Preparing..." : "Download All"}
+              {downloading ? "Preparing..." : "Download Filtered"}
+            </button>
+            <button
+              onClick={downloadClean}
+              disabled={downloadingClean}
+              style={{
+                background: "transparent",
+                color: "#f5efe6",
+                border: "1px solid rgba(245,239,230,0.2)",
+                borderRadius: 4,
+                padding: "8px 20px",
+                cursor: downloadingClean ? "not-allowed" : "pointer",
+                fontWeight: 300,
+                fontSize: 12,
+                letterSpacing: 2,
+                textTransform: "uppercase"
+              }}
+            >
+              {downloadingClean ? "Preparing..." : "Download Originals"}
             </button>
           </div>
           <div style={{
