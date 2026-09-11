@@ -16,6 +16,20 @@ function getEventId() {
   return params.get("event")
 }
 
+function applyDateStamp(canvas) {
+  const ctx = canvas.getContext("2d")
+  const now = new Date()
+  const day = String(now.getDate()).padStart(2, "0")
+  const month = String(now.getMonth() + 1).padStart(2, "0")
+  const year = String(now.getFullYear()).slice(2)
+  const dateStr = `${day} ${month} ${year}`
+  const fontSize = Math.floor(canvas.width * 0.038)
+  ctx.font = `${fontSize}px 'Courier New', monospace`
+  ctx.fillStyle = "rgba(255, 140, 0, 0.85)"
+  ctx.textAlign = "right"
+  ctx.fillText(dateStr, canvas.width - fontSize, canvas.height - fontSize)
+}
+
 function applyFilmFilter(file) {
   return new Promise((resolve) => {
     const img = new Image()
@@ -97,19 +111,28 @@ function applyFilmFilter(file) {
       ctx.fillStyle = leak2
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      const now = new Date()
-      const day = String(now.getDate()).padStart(2, "0")
-      const month = String(now.getMonth() + 1).padStart(2, "0")
-      const year = String(now.getFullYear()).slice(2)
-      const dateStr = `${day} ${month} ${year}`
-      const fontSize = Math.floor(canvas.width * 0.038)
-      ctx.font = `${fontSize}px 'Courier New', monospace`
-      ctx.fillStyle = "rgba(255, 140, 0, 0.85)"
-      ctx.textAlign = "right"
-      ctx.fillText(dateStr, canvas.width - fontSize, canvas.height - fontSize)
+      applyDateStamp(canvas)
 
       URL.revokeObjectURL(url)
       canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.88)
+    }
+    img.src = url
+  })
+}
+
+function applyCleanWithDate(file) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const canvas = document.createElement("canvas")
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext("2d")
+      ctx.drawImage(img, 0, 0)
+      applyDateStamp(canvas)
+      URL.revokeObjectURL(url)
+      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.92)
     }
     img.src = url
   })
@@ -239,25 +262,32 @@ export default function App() {
           setUploading(false)
           return
         }
-      }
 
-      let fileToUpload = file
+        const timestamp = Date.now()
+        const ext = file.name.split(".").pop() || "mp4"
+        const path = `${eventId}/${deviceId}_${timestamp}.${ext}`
 
-      if (!isVideo) {
+        await supabase.storage.from("photos").upload(path, file)
+        await supabase.storage.from("photos-clean").upload(path, file)
+
+      } else {
+        const timestamp = Date.now()
+        const path = `${eventId}/${deviceId}_${timestamp}.jpg`
+
         const filtered = await applyFilmFilter(file)
-        fileToUpload = await imageCompression(filtered, {
+        const filteredCompressed = await imageCompression(filtered, {
           maxSizeMB: 0.3,
           maxWidthOrHeight: 1920,
         })
+        await supabase.storage.from("photos").upload(path, filteredCompressed)
+
+        const clean = await applyCleanWithDate(file)
+        const cleanCompressed = await imageCompression(clean, {
+          maxSizeMB: 0.5,
+          maxWidthOrHeight: 1920,
+        })
+        await supabase.storage.from("photos-clean").upload(path, cleanCompressed)
       }
-
-      const ext = isVideo ? (file.name.split(".").pop() || "mp4") : "jpg"
-      const path = `${eventId}/${deviceId}_${Date.now()}.${ext}`
-      const { error } = await supabase.storage
-        .from("photos")
-        .upload(path, fileToUpload)
-
-      if (error) throw error
 
       const newCount = shotCount + 1
       localStorage.setItem(`shoto_count_${eventId}`, newCount)
