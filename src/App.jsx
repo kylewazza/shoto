@@ -151,10 +151,12 @@ export default function App() {
   const [requireUsername, setRequireUsername] = useState(false)
   const [requireConsent, setRequireConsent] = useState(false)
   const [allowGallery, setAllowGallery] = useState(false)
+  const [allowVideo, setAllowVideo] = useState(false)
   const [guestLimitReached, setGuestLimitReached] = useState(false)
   const [sessionLoaded, setSessionLoaded] = useState(false)
   const inputRef = useRef(null)
   const galleryRef = useRef(null)
+  const videoRef = useRef(null)
 
   useEffect(() => {
     if (eventId) loadSession()
@@ -164,7 +166,7 @@ export default function App() {
     try {
       const { data: eventData } = await supabase
         .from("events")
-        .select("photo_limit, guest_limit, name, require_username, require_consent, allow_gallery_upload")
+        .select("photo_limit, guest_limit, name, require_username, require_consent, allow_gallery_upload, allow_video")
         .eq("id", eventId)
         .single()
 
@@ -173,6 +175,7 @@ export default function App() {
       if (eventData?.require_username) setRequireUsername(eventData.require_username)
       if (eventData?.require_consent) setRequireConsent(eventData.require_consent)
       if (eventData?.allow_gallery_upload) setAllowGallery(eventData.allow_gallery_upload)
+      if (eventData?.allow_video) setAllowVideo(eventData.allow_video)
 
       const { data: existingSession } = await supabase
         .from("guest_sessions")
@@ -414,6 +417,17 @@ export default function App() {
             />
           )}
 
+          {allowVideo && (
+            <input
+              ref={videoRef}
+              type="file"
+              accept="video/*"
+              capture="camcorder"
+              style={{ display: "none" }}
+              onChange={handleCapture}
+            />
+          )}
+
           <button
             onClick={() => inputRef.current.click()}
             disabled={uploading}
@@ -426,11 +440,33 @@ export default function App() {
               height: 80,
               fontSize: 32,
               cursor: uploading ? "not-allowed" : "pointer",
-              marginBottom: allowGallery ? 16 : 0
+              marginBottom: (allowGallery || allowVideo) ? 16 : 0
             }}
           >
             {uploading ? "..." : "📷"}
           </button>
+
+          {allowVideo && (
+            <button
+              onClick={() => videoRef.current.click()}
+              disabled={uploading}
+              style={{
+                background: "transparent",
+                color: "#f5efe6",
+                border: "1px solid rgba(245,239,230,0.2)",
+                borderRadius: 4,
+                padding: "10px 24px",
+                fontSize: 11,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                cursor: uploading ? "not-allowed" : "pointer",
+                fontFamily: "sans-serif",
+                marginBottom: allowGallery ? 8 : 0
+              }}
+            >
+              Record video
+            </button>
+          )}
 
           {allowGallery && (
             <button
