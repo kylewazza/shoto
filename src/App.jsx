@@ -437,6 +437,9 @@ export default function App() {
   return (
     <div style={centreStyle}>
       <h1 style={logoStyle}>shoto</h1>
+      {eventName && (
+        <p style={{ color: "#c4a882", fontSize: 11, letterSpacing: 4, textTransform: "uppercase", marginBottom: 8, fontWeight: 300 }}>{eventName}</p>
+      )}
 
       {shotsLeft > 0 ? (
         <>
