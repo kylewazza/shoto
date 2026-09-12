@@ -163,8 +163,12 @@ export default function App() {
   const eventId = getEventId()
   const deviceId = getDeviceId()
   const [uploading, setUploading] = useState(false)
-  const [started, setStarted] = useState(false)
-  const [username, setUsername] = useState("")
+  const [started, setStarted] = useState(() => {
+    return localStorage.getItem(`shoto_started_${eventId}`) === "true"
+  })
+  const [username, setUsername] = useState(() => {
+    return localStorage.getItem(`shoto_username_${eventId}`) || ""
+  })
   const [consented, setConsented] = useState(false)
   const [shotCount, setShotCount] = useState(
     parseInt(localStorage.getItem(`shoto_count_${eventId}`) || "0")
@@ -413,7 +417,13 @@ export default function App() {
         )}
 
         <button
-          onClick={() => { if (canStart) setStarted(true) }}
+          onClick={() => {
+            if (canStart) {
+              localStorage.setItem(`shoto_started_${eventId}`, "true")
+              localStorage.setItem(`shoto_username_${eventId}`, username)
+              setStarted(true)
+            }
+          }}
           disabled={!canStart}
           style={{
             background: canStart ? "#f5efe6" : "#2a2420",
