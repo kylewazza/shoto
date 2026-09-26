@@ -12,7 +12,7 @@ export default function PromiseFayres() {
   async function loadEvents() {
     const { data } = await supabase
       .from('events')
-      .select('id, name, fayre_date, expires_at')
+      .select('id, name, fayre_date, expires_at, is_active')
       .eq('is_fayre', true)
       .eq('organiser', 'promise')
       .order('fayre_date', { ascending: true })
@@ -32,11 +32,9 @@ export default function PromiseFayres() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {events.map(event => {
-            const today = new Date().toISOString().slice(0, 10)
-            const isActive = event.fayre_date <= today && new Date(event.expires_at) > new Date()
             const isPast = new Date(event.expires_at) < new Date()
             if (isPast) return null
-            if (isActive) {
+            if (event.is_active) {
               return (
                 <a key={event.id} href={'/camera?event=' + event.id} style={{ display: 'block', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(245,239,230,0.15)', borderRadius: 8, padding: '24px 32px', textDecoration: 'none', color: '#f5efe6' }}>
                   <p style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 20, marginBottom: 8 }}>{event.name}</p>
