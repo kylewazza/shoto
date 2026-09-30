@@ -175,6 +175,7 @@ export default function App() {
   )
   const [photoLimit, setPhotoLimit] = useState(50)
   const [eventName, setEventName] = useState("")
+  const [revealAt, setRevealAt] = useState(null)
   const [requireUsername, setRequireUsername] = useState(false)
   const [requireConsent, setRequireConsent] = useState(false)
   const [allowGallery, setAllowGallery] = useState(false)
@@ -193,7 +194,7 @@ export default function App() {
     try {
       const { data: eventData } = await supabase
         .from("events")
-        .select("photo_limit, guest_limit, name, require_username, require_consent, allow_gallery_upload, allow_video")
+        .select("photo_limit, guest_limit, name, require_username, require_consent, allow_gallery_upload, allow_video, reveal_at")
         .eq("id", eventId)
         .single()
 
@@ -203,6 +204,7 @@ export default function App() {
       if (eventData?.require_consent) setRequireConsent(eventData.require_consent)
       if (eventData?.allow_gallery_upload) setAllowGallery(eventData.allow_gallery_upload)
       if (eventData?.allow_video) setAllowVideo(eventData.allow_video)
+      if (eventData?.reveal_at) setRevealAt(eventData.reveal_at)
 
       const { data: existingSession } = await supabase
         .from("guest_sessions")
@@ -270,7 +272,6 @@ export default function App() {
         const timestamp = Date.now()
         const ext = file.name.split(".").pop() || "mp4"
         const path = `${eventId}/${deviceId}_${timestamp}.${ext}`
-
         await supabase.storage.from("photos").upload(path, file)
         await supabase.storage.from("photos-clean").upload(path, file)
 
@@ -314,11 +315,26 @@ export default function App() {
   const shotsLeft = photoLimit - shotCount
   const canStart = !requireUsername || (username.trim().length > 0 && (requireConsent ? consented : true))
 
+  // Check if event has ended (24 hours after reveal)
+  const eventEnded = revealAt && new Date() > new Date(new Date(revealAt).getTime() + 24 * 60 * 60 * 1000)
+
   if (!eventId) {
     return (
       <div style={centreStyle}>
         <h1 style={logoStyle}>shoto</h1>
         <p style={mutedStyle}>No event found. Please scan the QR code.</p>
+      </div>
+    )
+  }
+
+  if (eventEnded) {
+    return (
+      <div style={centreStyle}>
+        <h1 style={logoStyle}>shoto</h1>
+        <p style={{ color: "#c4a882", fontSize: 11, letterSpacing: 4, textTransform: "uppercase", marginBottom: 32, fontWeight: 300 }}>Event ended</p>
+        <p style={{ ...mutedStyle, textAlign: "center", maxWidth: 280, lineHeight: 1.8 }}>
+          This event has now closed. The gallery has been revealed to the organiser.
+        </p>
       </div>
     )
   }
