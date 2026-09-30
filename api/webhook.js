@@ -50,6 +50,7 @@ export default async function handler(req, res) {
 
     const photoLimits = { basic: 30, standard: 40, premium: 50 }
     const guestLimits = { basic: 75, standard: 100, premium: 150 }
+    const prices = { basic: "£9.99", standard: "£19.99", premium: "£29.99" }
 
     const eventId = crypto.randomUUID()
     const guestUrl = `https://shoto.co.uk/camera?event=${eventId}`
@@ -82,6 +83,44 @@ export default async function handler(req, res) {
       day: "numeric", month: "long", year: "numeric"
     })
 
+    // Notification email to Kyle
+    await resend.emails.send({
+      from: "Shoto <hello@shoto.co.uk>",
+      to: "kylewilliamsmedia@gmail.com",
+      subject: `New booking — ${eventName}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #1a1410; color: #f5efe6;">
+          <h1 style="letter-spacing: 6px; font-size: 16px; font-weight: 300; margin-bottom: 32px; text-transform: lowercase;">shoto</h1>
+          <p style="color: #a89070; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 16px;">New booking</p>
+          <h2 style="font-size: 24px; font-weight: 400; margin-bottom: 32px;">${eventName}</h2>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 32px;">
+            <tr>
+              <td style="color: #a89070; font-size: 12px; padding: 10px 0; border-bottom: 1px solid rgba(245,239,230,0.06); width: 140px;">Tier</td>
+              <td style="color: #f5efe6; font-size: 14px; padding: 10px 0; border-bottom: 1px solid rgba(245,239,230,0.06);">${tier.charAt(0).toUpperCase() + tier.slice(1)} — ${prices[tier]}</td>
+            </tr>
+            <tr>
+              <td style="color: #a89070; font-size: 12px; padding: 10px 0; border-bottom: 1px solid rgba(245,239,230,0.06);">Occasion</td>
+              <td style="color: #f5efe6; font-size: 14px; padding: 10px 0; border-bottom: 1px solid rgba(245,239,230,0.06);">${occasion}</td>
+            </tr>
+            <tr>
+              <td style="color: #a89070; font-size: 12px; padding: 10px 0; border-bottom: 1px solid rgba(245,239,230,0.06);">Event date</td>
+              <td style="color: #f5efe6; font-size: 14px; padding: 10px 0; border-bottom: 1px solid rgba(245,239,230,0.06);">${eventDateFormatted}</td>
+            </tr>
+            <tr>
+              <td style="color: #a89070; font-size: 12px; padding: 10px 0; border-bottom: 1px solid rgba(245,239,230,0.06);">Reveal</td>
+              <td style="color: #f5efe6; font-size: 14px; padding: 10px 0; border-bottom: 1px solid rgba(245,239,230,0.06);">${revealDate} at ${revealTime}</td>
+            </tr>
+            <tr>
+              <td style="color: #a89070; font-size: 12px; padding: 10px 0;">Customer email</td>
+              <td style="color: #f5efe6; font-size: 14px; padding: 10px 0;">${customerEmail || "Not provided"}</td>
+            </tr>
+          </table>
+          <p style="color: #4a3f35; font-size: 11px;">shoto.co.uk</p>
+        </div>
+      `
+    })
+
+    // Customer email
     if (customerEmail) {
       await resend.emails.send({
         from: "Shoto <hello@shoto.co.uk>",
@@ -89,28 +128,19 @@ export default async function handler(req, res) {
         subject: `Your Shoto QR code is ready — ${eventName}`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: #1a1410; color: #f5efe6;">
-            
             <h1 style="letter-spacing: 6px; font-size: 16px; font-weight: 300; margin-bottom: 32px; text-transform: lowercase;">shoto</h1>
-            
             <p style="color: #a89070; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 16px;">Your event is ready</p>
             <h2 style="font-size: 24px; font-weight: 400; margin-bottom: 8px;">${eventName}</h2>
             <p style="color: #a89070; margin-bottom: 48px; font-size: 14px;">${occasion} — ${eventDateFormatted}</p>
-
             <p style="color: #f5efe6; font-size: 15px; line-height: 1.8; margin-bottom: 12px;">Your QR code is attached to this email. Print it and display it at your event so guests can scan it throughout the day.</p>
-
             <p style="color: #a89070; font-size: 13px; line-height: 1.8; margin-bottom: 8px;">If you'd prefer to share a link directly, you can also send guests this URL:</p>
             <p style="color: #c4a882; font-size: 13px; word-break: break-all; margin-bottom: 48px;">${guestUrl}</p>
-
             <hr style="border: none; border-top: 1px solid rgba(245,239,230,0.08); margin-bottom: 32px;" />
-
             <p style="color: #a89070; font-size: 13px; line-height: 1.8; margin-bottom: 48px;">Your gallery will be revealed on <strong style="color: #f5efe6;">${revealDate} at ${revealTime}</strong>. You'll receive an email when it's ready to view.</p>
-
             <img src="${qrImageUrl}" width="160" height="160" alt="QR Code" style="display: block; margin: 0 auto 32px; border-radius: 4px;" />
-
             <hr style="border: none; border-top: 1px solid rgba(245,239,230,0.08); margin-bottom: 32px;" />
-
             <p style="color: #a89070; font-size: 13px; font-style: italic;">Enjoy every moment, Shoto</p>
-
+            <p style="color: #4a3f35; font-size: 11px; margin-top: 16px;">Questions? Contact us at <a href="mailto:hello@shoto.co.uk" style="color: #4a3f35;">hello@shoto.co.uk</a></p>
           </div>
         `,
         attachments: [
