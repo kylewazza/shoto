@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react"
 import { supabase } from "./lib/supabase"
-import { QRCodeSVG } from "qrcode.react"
 
 export default function Success() {
   const [event, setEvent] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [tracked, setTracked] = useState(false)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -13,8 +13,30 @@ export default function Success() {
     else setLoading(false)
   }, [])
 
+  useEffect(() => {
+    if (event && !tracked) {
+      const prices = { basic: 9.99, standard: 19.99, premium: 29.99 }
+      const value = prices[event.tier] || prices[Object.keys(prices).find(k => event.photo_limit === { basic: 30, standard: 40, premium: 50 }[k])] || 19.99
+
+      if (typeof window.gtag === "function") {
+        window.gtag("event", "purchase", {
+          transaction_id: event.stripe_session_id,
+          value: value,
+          currency: "GBP",
+          items: [{
+            item_name: event.name,
+            item_category: event.occasion,
+            price: value,
+            quantity: 1
+          }]
+        })
+      }
+      setTracked(true)
+    }
+  }, [event, tracked])
+
   async function loadEvent(sessionId) {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("events")
       .select("*")
       .eq("stripe_session_id", sessionId)
@@ -23,8 +45,6 @@ export default function Success() {
     if (data) setEvent(data)
     setLoading(false)
   }
-
-  const guestUrl = event ? `https://shoto.co.uk/camera?event=${event.id}` : ""
 
   if (loading) {
     return (
