@@ -121,12 +121,13 @@ export default function Landing() {
       {/* Nav */}
       <nav style={{
         display: "flex",
-        justifyContent: "center",
+        justifyContent: "space-between",
         alignItems: "center",
         padding: "28px 48px",
         position: "relative",
         zIndex: 10
       }}>
+        <div style={{ flex: 1 }} />
         <h1 style={{
           margin: 0,
           letterSpacing: 6,
@@ -135,6 +136,9 @@ export default function Landing() {
           fontWeight: 300,
           color: "#f5efe6"
         }}>shoto</h1>
+        <div style={{ flex: 1, display: "flex", justifyContent: "flex-end", gap: 32 }}>
+          <a href="/contact" style={{ color: "#a89070", fontSize: 11, letterSpacing: 3, textTransform: "uppercase", textDecoration: "none", fontWeight: 300 }}>Contact</a>
+        </div>
       </nav>
 
       {/* Hero */}
