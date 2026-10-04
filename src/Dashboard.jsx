@@ -70,7 +70,7 @@ export default function Dashboard() {
     const now = new Date()
     const revealTime = new Date(data.reveal_at)
 
-    if (now >= revealTime) {
+        if (now >= revealTime || data.dashboard_always_open) {
       setRevealed(true)
       await loadPhotos()
       await loadSessions()
