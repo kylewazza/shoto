@@ -137,6 +137,7 @@ export default function Landing() {
           color: "#f5efe6"
         }}>shoto</h1>
         <div style={{ flex: 1, display: "flex", justifyContent: "flex-end", gap: 32 }}>
+          <a href="/events" style={{ color: "#a89070", fontSize: 11, letterSpacing: 3, textTransform: "uppercase", textDecoration: "none", fontWeight: 300 }}>Events</a>
           <a href="/contact" style={{ color: "#a89070", fontSize: 11, letterSpacing: 3, textTransform: "uppercase", textDecoration: "none", fontWeight: 300 }}>Contact</a>
         </div>
       </nav>
@@ -352,6 +353,7 @@ export default function Landing() {
       }}>
         <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 300 }}>shoto</span>
         <a href="https://www.instagram.com/useshoto" target="_blank" rel="noopener noreferrer" style={{ color: "#a89070", textDecoration: "none", letterSpacing: 2 }}>useshoto</a>
+        <a href="/events" style={{ color: "#a89070", textDecoration: "none", letterSpacing: 2 }}>Events</a>
         <a href="/contact" style={{ color: "#a89070", textDecoration: "none", letterSpacing: 2 }}>Contact</a>
         <a href="/privacy" style={{ color: "#a89070", textDecoration: "none", letterSpacing: 2 }}>Privacy Policy</a>
         <span>© 2026 est.</span>
