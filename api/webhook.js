@@ -45,7 +45,9 @@ export default async function handler(req, res) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object
-    const { tier, eventName, occasion, eventDate, revealAt } = session.metadata
+    const { tier, eventName, occasion, eventDate, revealAt, heardFrom } = session.metadata
+    const heardFromSafe = String(heardFrom || "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     const customerEmail = session.customer_details?.email
 
     const photoLimits = { basic: 30, standard: 40, premium: 50 }
@@ -64,7 +66,8 @@ export default async function handler(req, res) {
       photo_limit: photoLimits[tier],
       guest_limit: guestLimits[tier],
       stripe_session_id: session.id,
-      customer_email: customerEmail
+      customer_email: customerEmail,
+      heard_from: heardFrom || null
     })
 
     if (error) {
@@ -111,8 +114,12 @@ export default async function handler(req, res) {
               <td style="color: #f5efe6; font-size: 14px; padding: 10px 0; border-bottom: 1px solid rgba(245,239,230,0.06);">${revealDate} at ${revealTime}</td>
             </tr>
             <tr>
-              <td style="color: #a89070; font-size: 12px; padding: 10px 0;">Customer email</td>
-              <td style="color: #f5efe6; font-size: 14px; padding: 10px 0;">${customerEmail || "Not provided"}</td>
+              <td style="color: #a89070; font-size: 12px; padding: 10px 0; border-bottom: 1px solid rgba(245,239,230,0.06);">Customer email</td>
+              <td style="color: #f5efe6; font-size: 14px; padding: 10px 0; border-bottom: 1px solid rgba(245,239,230,0.06);">${customerEmail || "Not provided"}</td>
+            </tr>
+            <tr>
+              <td style="color: #a89070; font-size: 12px; padding: 10px 0;">Heard about us</td>
+              <td style="color: #f5efe6; font-size: 14px; padding: 10px 0;">${heardFromSafe || "Not given"}</td>
             </tr>
           </table>
           <p style="color: #4a3f35; font-size: 11px;">shoto.co.uk</p>

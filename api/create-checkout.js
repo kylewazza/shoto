@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" })
   }
 
-  const { tier, eventName, occasion, eventDate, revealAt } = req.body
+  const { tier, eventName, occasion, eventDate, revealAt, heardFrom } = req.body
 
   if (!tier || !eventName || !occasion || !eventDate || !revealAt) {
     return res.status(400).json({ error: "Missing required fields" })
@@ -42,7 +42,8 @@ export default async function handler(req, res) {
         eventName,
         occasion,
         eventDate,
-        revealAt
+        revealAt,
+        heardFrom: String(heardFrom || "").slice(0, 200)
       },
     })
 

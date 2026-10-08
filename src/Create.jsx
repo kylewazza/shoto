@@ -11,6 +11,18 @@ const OCCASIONS = [
   "Other"
 ]
 
+const HEARD_FROM = [
+  "Google search",
+  "ChatGPT or another AI assistant",
+  "Instagram",
+  "TikTok",
+  "Facebook",
+  "Wedding fayre or event",
+  "Friend, family or a guest at an event",
+  "Venue or supplier recommendation",
+  "Other"
+]
+
 const TIERS = [
   {
     id: "basic",
@@ -50,6 +62,8 @@ export default function Create() {
   const [occasion, setOccasion] = useState("")
   const [eventDate, setEventDate] = useState("")
   const [revealAt, setRevealAt] = useState("")
+  const [heardFrom, setHeardFrom] = useState("")
+  const [heardFromOther, setHeardFromOther] = useState("")
   const [loading, setLoading] = useState(false)
 
   function handleDateChange(date) {
@@ -58,7 +72,7 @@ export default function Create() {
   }
 
   async function handleCheckout() {
-    if (!tier || !eventName.trim() || !occasion || !eventDate || !revealAt) return
+    if (!tier || !eventName.trim() || !occasion || !eventDate || !revealAt || !heardFrom) return
     setLoading(true)
 
     try {
@@ -70,7 +84,10 @@ export default function Create() {
           eventName: eventName.trim(),
           occasion,
           eventDate,
-          revealAt
+          revealAt,
+          heardFrom: heardFrom === "Other" && heardFromOther.trim()
+            ? `Other: ${heardFromOther.trim()}`
+            : heardFrom
         })
       })
 
@@ -89,7 +106,7 @@ export default function Create() {
     }
   }
 
-  const isValid = tier && eventName.trim() && occasion && eventDate && revealAt
+  const isValid = tier && eventName.trim() && occasion && eventDate && revealAt && heardFrom
 
   const inputStyle = {
     width: "100%",
@@ -195,6 +212,28 @@ export default function Create() {
             <p style={{ color: "#a89070", fontSize: 11, marginTop: -8, marginBottom: 24, letterSpacing: 0.5 }}>
               Default is 10am the morning after your event. You can change this.
             </p>
+
+            <label style={labelStyle}>How did you hear about us?</label>
+            <select
+              value={heardFrom}
+              onChange={(e) => setHeardFrom(e.target.value)}
+              style={{ ...inputStyle, cursor: "pointer" }}
+            >
+              <option value="" style={{ background: "#1a1410" }}>Select one</option>
+              {HEARD_FROM.map(h => (
+                <option key={h} value={h} style={{ background: "#1a1410" }}>{h}</option>
+              ))}
+            </select>
+            {heardFrom === "Other" && (
+              <input
+                type="text"
+                placeholder="Tell us where"
+                maxLength={100}
+                value={heardFromOther}
+                onChange={(e) => setHeardFromOther(e.target.value)}
+                style={inputStyle}
+              />
+            )}
           </div>
         </div>
 
