@@ -8,6 +8,57 @@ function getEventId() {
   return params.get("event")
 }
 
+const LIST_PAGE_SIZE = 1000
+const ZIP_PART_SIZE = 300
+
+// Storage .list() returns 100 files by default, so page through the folder
+// until every file is in. Oldest first keeps the pages stable while guests
+// are still uploading. Hidden files such as .emptyFolderPlaceholder are skipped.
+async function listAllFiles(bucket, folder) {
+  const files = []
+  const seen = new Set()
+  for (let offset = 0; ; offset += LIST_PAGE_SIZE) {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .list(folder, { limit: LIST_PAGE_SIZE, offset, sortBy: { column: "created_at", order: "asc" } })
+    if (error) throw error
+    for (const file of data) {
+      if (file.name.startsWith(".") || seen.has(file.name)) continue
+      seen.add(file.name)
+      files.push(file)
+    }
+    if (data.length < LIST_PAGE_SIZE) break
+  }
+  return files.reverse()
+}
+
+function splitIntoParts(items) {
+  const parts = []
+  for (let i = 0; i < items.length; i += ZIP_PART_SIZE) parts.push(items.slice(i, i + ZIP_PART_SIZE))
+  return parts
+}
+
+// Builds one ZIP for one part, fetching a few files at a time to keep memory
+// and network use steady. Returns how many files could not be fetched.
+async function downloadZip(files, filename) {
+  const zip = new JSZip()
+  let failed = 0
+  for (let i = 0; i < files.length; i += 8) {
+    await Promise.all(files.slice(i, i + 8).map(async ({ url, name }) => {
+      try {
+        const response = await fetch(url)
+        if (!response.ok) throw new Error(response.status)
+        zip.file(name, await response.blob())
+      } catch {
+        failed++
+      }
+    }))
+  }
+  const content = await zip.generateAsync({ type: "blob" })
+  saveAs(content, filename)
+  return failed
+}
+
 function Countdown({ revealAt }) {
   const [timeLeft, setTimeLeft] = useState("")
 
@@ -42,10 +93,11 @@ export default function Dashboard() {
   const eventId = getEventId()
   const [event, setEvent] = useState(null)
   const [photos, setPhotos] = useState([])
+  const [cleanFiles, setCleanFiles] = useState([])
   const [sessions, setSessions] = useState({})
   const [loading, setLoading] = useState(true)
-  const [downloading, setDownloading] = useState(false)
-  const [downloadingClean, setDownloadingClean] = useState(false)
+  const [downloading, setDownloading] = useState(null)
+  const [downloaded, setDownloaded] = useState({})
   const [revealed, setRevealed] = useState(false)
 
   useEffect(() => {
@@ -93,13 +145,18 @@ export default function Dashboard() {
   }
 
   async function loadPhotos() {
-    const { data, error } = await supabase.storage
-      .from("photos")
-      .list(eventId, { sortBy: { column: "created_at", order: "desc" } })
+    let files, clean
+    try {
+      [files, clean] = await Promise.all([
+        listAllFiles("photos", eventId),
+        listAllFiles("photos-clean", eventId)
+      ])
+    } catch (err) {
+      console.error(err)
+      return
+    }
 
-    if (error || !data) return
-
-    const urls = data.map((file) => {
+    const urls = files.map((file) => {
       const { data: urlData } = supabase.storage
         .from("photos")
         .getPublicUrl(`${eventId}/${file.name}`)
@@ -109,49 +166,26 @@ export default function Dashboard() {
     })
 
     setPhotos(urls)
+    setCleanFiles(clean.map((file) => ({
+      name: file.name,
+      url: supabase.storage.from("photos-clean").getPublicUrl(`${eventId}/${file.name}`).data.publicUrl
+    })))
   }
 
-  async function downloadAll() {
-    setDownloading(true)
-    const zip = new JSZip()
-
-    await Promise.all(
-      photos.map(async ({ url, name }) => {
-        const response = await fetch(url)
-        const blob = await response.blob()
-        zip.file(name, blob)
-      })
-    )
-
-    const content = await zip.generateAsync({ type: "blob" })
-    saveAs(content, `shoto-${eventId}.zip`)
-    setDownloading(false)
-  }
-
-  async function downloadClean() {
-    setDownloadingClean(true)
-    const zip = new JSZip()
-
-    const { data: cleanFiles } = await supabase.storage
-      .from("photos-clean")
-      .list(eventId, { sortBy: { column: "created_at", order: "desc" } })
-
-    if (cleanFiles && cleanFiles.length > 0) {
-      await Promise.all(
-        cleanFiles.map(async (file) => {
-          const { data: urlData } = supabase.storage
-            .from("photos-clean")
-            .getPublicUrl(`${eventId}/${file.name}`)
-          const response = await fetch(urlData.publicUrl)
-          const blob = await response.blob()
-          zip.file(file.name, blob)
-        })
-      )
+  async function downloadPart(kind, files, index, total) {
+    const key = `${kind}-${index}`
+    setDownloading(key)
+    const prefix = kind === "clean" ? `shoto-clean-${eventId}` : `shoto-${eventId}`
+    const filename = total > 1 ? `${prefix}-part-${index + 1}-of-${total}.zip` : `${prefix}.zip`
+    try {
+      const failed = await downloadZip(files, filename)
+      setDownloaded(prev => ({ ...prev, [key]: true }))
+      if (failed > 0) alert(`${failed} file${failed === 1 ? "" : "s"} couldn't be downloaded. Please try this download again.`)
+    } catch (err) {
+      console.error(err)
+      alert("Something went wrong preparing your download. Please try again.")
     }
-
-    const content = await zip.generateAsync({ type: "blob" })
-    saveAs(content, `shoto-clean-${eventId}.zip`)
-    setDownloadingClean(false)
+    setDownloading(null)
   }
 
   if (!eventId) {
@@ -231,42 +265,48 @@ export default function Dashboard() {
         <>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
             <p style={{ color: "#a89070", margin: 0 }}>{photos.length} photos</p>
-            <button
-              onClick={downloadAll}
-              disabled={downloading}
-              style={{
-                background: downloading ? "#333" : "#f5efe6",
-                color: "#1a1410",
-                border: "none",
-                borderRadius: 4,
-                padding: "8px 20px",
-                cursor: downloading ? "not-allowed" : "pointer",
-                fontWeight: 500,
-                fontSize: 12,
-                letterSpacing: 2,
-                textTransform: "uppercase"
-              }}
-            >
-              {downloading ? "Preparing..." : "Download Filtered"}
-            </button>
-            <button
-              onClick={downloadClean}
-              disabled={downloadingClean}
-              style={{
-                background: "transparent",
-                color: "#f5efe6",
-                border: "1px solid rgba(245,239,230,0.2)",
-                borderRadius: 4,
-                padding: "8px 20px",
-                cursor: downloadingClean ? "not-allowed" : "pointer",
-                fontWeight: 300,
-                fontSize: 12,
-                letterSpacing: 2,
-                textTransform: "uppercase"
-              }}
-            >
-              {downloadingClean ? "Preparing..." : "Download Originals"}
-            </button>
+            {photos.length > ZIP_PART_SIZE && (
+              <p style={{ color: "#a89070", margin: 0, fontSize: 12, flexBasis: "100%" }}>
+                Large galleries download in parts of {ZIP_PART_SIZE}. Download each part to get everything.
+              </p>
+            )}
+            {[
+              { kind: "filtered", label: "Download Filtered", files: photos, primary: true },
+              { kind: "clean", label: "Download Originals", files: cleanFiles, primary: false }
+            ].map(({ kind, label, files, primary }) => {
+              const parts = splitIntoParts(files)
+              if (parts.length === 0) return null
+              return parts.map((part, index) => {
+                const key = `${kind}-${index}`
+                const busy = downloading === key
+                const text = busy
+                  ? "Preparing..."
+                  : parts.length > 1
+                    ? `${label} ${index + 1} of ${parts.length}${downloaded[key] ? " ✓" : ""}`
+                    : label
+                return (
+                  <button
+                    key={key}
+                    onClick={() => downloadPart(kind, part, index, parts.length)}
+                    disabled={downloading !== null}
+                    style={{
+                      background: primary ? (busy ? "#333" : "#f5efe6") : "transparent",
+                      color: primary ? "#1a1410" : "#f5efe6",
+                      border: primary ? "none" : "1px solid rgba(245,239,230,0.2)",
+                      borderRadius: 4,
+                      padding: "8px 20px",
+                      cursor: downloading !== null ? "not-allowed" : "pointer",
+                      fontWeight: primary ? 500 : 300,
+                      fontSize: 12,
+                      letterSpacing: 2,
+                      textTransform: "uppercase"
+                    }}
+                  >
+                    {text}
+                  </button>
+                )
+              })
+            })}
           </div>
           <div style={{
             display: "grid",
