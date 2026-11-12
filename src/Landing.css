@@ -1,0 +1,112 @@
+/* Home page only. Shared tokens, nav, footer and buttons live in site.css. */
+
+/* Hero */
+.lp-hero { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; padding: 48px 0 96px; }
+.lp-hero h1 {
+  font-family: var(--display); font-style: italic; font-weight: 400;
+  font-size: clamp(44px, 5.6vw, 76px); line-height: 1.05; letter-spacing: -0.01em;
+  margin: 0 0 24px; padding-bottom: 4px;
+}
+.lp-hero h1 em { font-style: normal; color: var(--stamp); }
+.lp-hero p { color: var(--muted); font-size: 19px; max-width: 30ch; margin: 0 0 36px; }
+.lp-hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.lp-table { position: relative; height: min(600px, 70dvh); }
+.lp-print {
+  position: absolute; width: 46%; aspect-ratio: 3 / 4;
+  transform: rotate(var(--r));
+  transition: transform 260ms var(--ease-out);
+}
+.lp-print-inner {
+  width: 100%; height: 100%; background: #f2ece2; padding: 10px 10px 34px;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.35);
+  animation: lp-deal 900ms var(--ease-out) both; animation-delay: var(--d);
+}
+.lp-table:not(.is-ready) .lp-print-inner { animation-play-state: paused; }
+.lp-print img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@keyframes lp-deal {
+  from { opacity: 0; transform: translate3d(0, 60px, 0) rotate(-8deg) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .lp-print:hover { transform: rotate(0deg) translateY(-8px) scale(1.02); z-index: 5; }
+}
+.lp-counter {
+  position: absolute; left: 30%; bottom: 4%; z-index: 6; transform: rotate(-3deg);
+  font-family: var(--mono); font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--stamp); background: rgba(23, 18, 14, 0.85); padding: 8px 14px; border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(255, 149, 72, 0.35);
+}
+.lp-counter b { font-weight: 700; display: inline-block; min-width: 2ch; text-align: right; }
+
+@media (max-width: 860px) {
+  .lp-hero { grid-template-columns: 1fr; min-height: 0; padding-top: 16px; gap: 24px; }
+  .lp-table { height: 440px; }
+  .lp-print { width: 52%; }
+}
+
+/* The reveal: photos develop when they scroll into view */
+.lp-develop { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
+.lp-tile { position: relative; overflow: hidden; border-radius: 4px; background: #0d0a08; }
+.lp-tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.lp-tile .lp-latent { filter: blur(18px) brightness(0.35) sepia(0.8) saturate(0.7); transform: scale(1.12); }
+.lp-tile .lp-sharp { opacity: 0; transition: opacity 1600ms var(--ease-out); transition-delay: var(--d); }
+.lp-develop.is-in .lp-sharp { opacity: 1; }
+.lp-tile:nth-child(1) { grid-column: span 5; grid-row: span 2; min-height: 320px; }
+.lp-tile:nth-child(2) { grid-column: span 7; aspect-ratio: 16 / 10; }
+.lp-tile:nth-child(3) { grid-column: span 3; aspect-ratio: 3 / 4; }
+.lp-tile:nth-child(4) { grid-column: span 4; }
+@media (max-width: 760px) {
+  .lp-develop { grid-template-columns: 1fr 1fr; }
+  .lp-tile:nth-child(n) { grid-column: span 1; grid-row: auto; aspect-ratio: 3 / 4; min-height: 0; }
+  .lp-tile:nth-child(1), .lp-tile:nth-child(4) { grid-column: span 2; aspect-ratio: 4 / 3; }
+}
+
+/* Occasions band, the one marquee on the page */
+.lp-marquee { border-block: 1px solid var(--line); overflow: hidden; padding: 28px 0; }
+.lp-marquee-track { display: flex; width: max-content; animation: lp-slide 60s linear infinite; }
+.lp-marquee span { font-family: var(--display); font-style: italic; font-size: clamp(32px, 4vw, 52px); white-space: nowrap; padding-right: 56px; color: var(--cream); }
+.lp-marquee span:nth-child(even) { color: var(--gold); }
+@keyframes lp-slide { to { transform: translateX(-50%); } }
+
+/* Testimonial */
+.lp-quote { display: grid; grid-template-columns: 5fr 7fr; gap: 64px; align-items: center; }
+.lp-quote figure { margin: 0; aspect-ratio: 3 / 4; overflow: hidden; border-radius: 4px; }
+.lp-quote figure img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lp-quote blockquote { margin: 0; font-family: var(--display); font-size: clamp(24px, 2.4vw, 32px); line-height: 1.4; }
+.lp-quote cite { display: block; margin-top: 28px; font-style: normal; color: var(--muted); font-size: 16px; }
+.lp-quote cite b { color: var(--cream); font-weight: 600; }
+@media (max-width: 760px) { .lp-quote { grid-template-columns: 1fr; gap: 32px; } .lp-quote figure { aspect-ratio: 4 / 3; } }
+
+/* Pricing as rows */
+.lp-prices { border-top: 1px solid var(--line); }
+.lp-price {
+  display: grid; grid-template-columns: 1.2fr 1fr 1fr 0.8fr auto; align-items: center; gap: 24px;
+  padding: 26px 20px; border-bottom: 1px solid var(--line); border-radius: 6px;
+  text-decoration: none; transition: background-color 200ms ease;
+}
+.lp-price.is-featured { background: var(--bg-raised); }
+@media (hover: hover) and (pointer: fine) { .lp-price:hover { background: var(--bg-raised); } }
+.lp-price-name { font-family: var(--display); font-style: italic; font-size: 30px; }
+.lp-price-name small { display: block; font-family: var(--mono); font-style: normal; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--stamp); }
+.lp-price-meta { color: var(--muted); }
+.lp-price-cost { font-size: 28px; font-weight: 600; }
+.lp-price-go { color: var(--stamp); font-weight: 600; white-space: nowrap; }
+.lp-included { color: var(--muted); margin: 28px 0 0; max-width: 70ch; }
+@media (max-width: 760px) {
+  .lp-price { grid-template-columns: 1fr auto; gap: 4px 16px; padding: 22px 12px; }
+  .lp-price-name { grid-column: 1; }
+  .lp-price-cost { grid-column: 2; grid-row: 1; text-align: right; }
+  .lp-price-meta { grid-column: 1 / -1; font-size: 15px; }
+  .lp-price-go { display: none; }
+}
+
+/* Reduced motion: keep fades that explain, drop the movement */
+@media (prefers-reduced-motion: reduce) {
+  .lp-print-inner { animation: lp-fade 300ms ease both; animation-delay: 0ms; }
+  .lp-print { transition: none; }
+  .lp-tile .lp-sharp { transition-duration: 300ms; transition-delay: 0ms; }
+  .lp-marquee-track { animation: none; flex-wrap: wrap; width: auto; padding: 0 24px; }
+  .lp-marquee-track span[aria-hidden] { display: none; }
+}
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
