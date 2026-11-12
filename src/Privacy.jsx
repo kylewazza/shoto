@@ -1,20 +1,6 @@
-export default function Privacy() {
-  return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#1a1410",
-      color: "#f5efe6",
-      fontFamily: "'Inter', sans-serif",
-      padding: "64px 24px",
-      maxWidth: 2000,
-      margin: "0 auto"
-    }}>
-      <h1 style={{ letterSpacing: 4, fontSize: 18, fontWeight: 300, marginBottom: 8 }}>shoto</h1>
-      <p style={{ color: "#c4a882", fontSize: 11, letterSpacing: 4, textTransform: "uppercase", marginBottom: 48, fontWeight: 300 }}>Privacy Policy</p>
+import { SiteNav, SiteFooter } from "./SiteChrome"
 
-      <p style={{ color: "#a89070", fontSize: 12, marginBottom: 48 }}>Last updated: August 2026</p>
-
-      {[
+const SECTIONS = [
         {
           title: "Who we are",
           body: "Shoto is a digital disposable camera service for events, operated as a sole trader business based in Sheffield, United Kingdom. You can contact us at kylewilliamsmedia@gmail.com."
@@ -55,24 +41,30 @@ export default function Privacy() {
           title: "Contact",
           body: "For any privacy related questions or to exercise your rights:\n\nEmail: kylewilliamsmedia@gmail.com\nWebsite: shoto.co.uk"
         }
-      ].map(({ title, body }) => (
-        <div key={title} style={{ marginBottom: 40 }}>
-          <h2 style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: 18,
-            fontWeight: 400,
-            color: "#f5efe6",
-            marginBottom: 12
-          }}>{title}</h2>
-          {body.split("\n\n").map((para, i) => (
-            <p key={i} style={{ color: "#a89070", fontSize: 14, lineHeight: 1.8, marginBottom: 8, fontWeight: 300 }}>{para}</p>
+]
+
+export default function Privacy() {
+  return (
+    <div className="site">
+      <div className="site-grain" />
+      <div className="site-wrap">
+        <SiteNav />
+      </div>
+
+      <main className="site-wrap site-wrap--narrow site-section--tight">
+        <h1 className="site-title">Privacy Policy</h1>
+        <p className="site-lead" style={{ marginBottom: 0 }}>Last updated: August 2026</p>
+        <div className="site-prose">
+          {SECTIONS.map(({ title, body }) => (
+            <section key={title}>
+              <h2>{title}</h2>
+              {body.split("\n\n").map((para, i) => <p key={i}>{para}</p>)}
+            </section>
           ))}
         </div>
-      ))}
+      </main>
 
-      <div style={{ borderTop: "1px solid rgba(245,239,230,0.08)", paddingTop: 32, marginTop: 24 }}>
-        <a href="/" style={{ color: "#c4a882", fontSize: 12, textDecoration: "none", letterSpacing: 2 }}>← Back to shoto.co.uk</a>
-      </div>
+      <SiteFooter small />
     </div>
   )
 }

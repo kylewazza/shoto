@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { SiteNav, SiteFooter } from "./SiteChrome"
 
 export default function Contact() {
   const [form, setForm] = useState({ name: "", email: "", message: "" })
@@ -25,119 +26,51 @@ export default function Contact() {
     setSending(false)
   }
 
-  const inputStyle = {
-    width: "100%",
-    padding: "12px 16px",
-    borderRadius: 6,
-    border: "1px solid rgba(245,239,230,0.15)",
-    background: "rgba(255,255,255,0.03)",
-    color: "#f5efe6",
-    fontSize: 14,
-    marginBottom: 16,
-    boxSizing: "border-box",
-    fontFamily: "'Inter', sans-serif"
-  }
-
-  const labelStyle = {
-    color: "#a89070",
-    fontSize: 11,
-    letterSpacing: 2,
-    textTransform: "uppercase",
-    display: "block",
-    marginBottom: 8,
-    fontWeight: 300
-  }
+  const ready = form.name && form.email && form.message
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#1a1410",
-      color: "#f5efe6",
-      fontFamily: "'Inter', sans-serif",
-      padding: "64px 48px",
-    }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-        <h1 style={{ letterSpacing: 4, fontSize: 18, fontWeight: 300, marginBottom: 64 }}>shoto</h1>
-
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 80,
-          alignItems: "start"
-        }}>
-          {/* Left */}
-          <div>
-            <p style={{ color: "#c4a882", fontSize: 11, letterSpacing: 4, textTransform: "uppercase", marginBottom: 24, fontWeight: 300 }}>Get in touch</p>
-            <p style={{
-              fontFamily: "'Playfair Display', serif",
-              fontStyle: "italic",
-              fontSize: 32,
-              color: "#f5efe6",
-              lineHeight: 1.4,
-              marginBottom: 32,
-              fontWeight: 400
-            }}>Have a question? We'd love to hear from you.</p>
-            <p style={{ color: "#a89070", fontSize: 14, lineHeight: 1.9, marginBottom: 32, fontWeight: 300 }}>
-              Whether you have a question about a package, want to discuss a bespoke event, or just want to find out more about how Shoto works — get in touch and we'll get back to you within 24 hours.
-            </p>
-            <p style={{ color: "#a89070", fontSize: 14, marginBottom: 8, fontWeight: 300 }}>Or email us directly:</p>
-            <a href="mailto:hello@shoto.co.uk" style={{ color: "#c4a882", fontSize: 14, textDecoration: "none", letterSpacing: 1 }}>hello@shoto.co.uk</a>
-
-            <div style={{ marginTop: 48, paddingTop: 32, borderTop: "1px solid rgba(245,239,230,0.08)" }}>
-              <a href="/" style={{ color: "#a89070", fontSize: 12, textDecoration: "none", letterSpacing: 2 }}>← Back to shoto.co.uk</a>
-            </div>
-          </div>
-
-          {/* Right */}
-          <div>
-            {sent ? (
-              <div style={{ textAlign: "center", padding: "80px 0" }}>
-                <p style={{ color: "#c4a882", fontSize: 13, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Message sent</p>
-                <p style={{ color: "#a89070", fontSize: 14, fontWeight: 300 }}>We will be in touch within 24 hours.</p>
-              </div>
-            ) : (
-              <div>
-                <label style={labelStyle}>Your name</label>
-                <input name="name" value={form.name} onChange={handleChange} placeholder="Full name" style={inputStyle} />
-
-                <label style={labelStyle}>Email</label>
-                <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="your@email.com" style={inputStyle} />
-
-                <label style={labelStyle}>Message</label>
-                <textarea
-                  name="message"
-                  value={form.message}
-                  onChange={handleChange}
-                  placeholder="How can we help?"
-                  rows={6}
-                  style={{ ...inputStyle, resize: "vertical" }}
-                />
-
-                <button
-                  onClick={handleSubmit}
-                  disabled={sending || !form.name || !form.email || !form.message}
-                  style={{
-                    width: "100%",
-                    padding: "14px",
-                    borderRadius: 4,
-                    border: "none",
-                    background: form.name && form.email && form.message ? "#f5efe6" : "#2a2420",
-                    color: form.name && form.email && form.message ? "#1a1410" : "#4a3f35",
-                    fontSize: 12,
-                    fontWeight: 500,
-                    letterSpacing: 3,
-                    textTransform: "uppercase",
-                    cursor: form.name && form.email && form.message ? "pointer" : "not-allowed",
-                    fontFamily: "'Inter', sans-serif"
-                  }}
-                >
-                  {sending ? "Sending..." : "Send message"}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+    <div className="site">
+      <div className="site-grain" />
+      <div className="site-wrap">
+        <SiteNav current="/contact" />
       </div>
+
+      <main className="site-wrap site-section--tight ct-grid">
+        <div>
+          <h1 className="site-title">Have a question? Ask away.</h1>
+          <p className="site-lead">Whether it's about a package, a bigger event, or just how Shoto works, we'll get back to you within 24 hours.</p>
+          <p className="ct-direct">Or email us directly at <a href="mailto:hello@shoto.co.uk">hello@shoto.co.uk</a></p>
+        </div>
+
+        <div>
+          {sent ? (
+            <div className="site-sent">
+              <h3>Message sent</h3>
+              <p>We will be in touch within 24 hours.</p>
+            </div>
+          ) : (
+            <div className="site-form">
+              <div className="site-field">
+                <label htmlFor="ct-name">Your name</label>
+                <input id="ct-name" name="name" value={form.name} onChange={handleChange} placeholder="Full name" />
+              </div>
+              <div className="site-field">
+                <label htmlFor="ct-email">Email</label>
+                <input id="ct-email" name="email" type="email" value={form.email} onChange={handleChange} placeholder="your@email.com" />
+              </div>
+              <div className="site-field">
+                <label htmlFor="ct-message">Message</label>
+                <textarea id="ct-message" name="message" value={form.message} onChange={handleChange} placeholder="How can we help?" rows={6} />
+              </div>
+              <button className="site-btn site-btn--block" onClick={handleSubmit} disabled={sending || !ready}>
+                {sending ? "Sending..." : "Send message"}
+              </button>
+            </div>
+          )}
+        </div>
+      </main>
+
+      <SiteFooter small />
     </div>
   )
 }

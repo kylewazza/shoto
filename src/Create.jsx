@@ -1,4 +1,6 @@
 import { useState } from "react"
+import { SiteNav, SiteFooter } from "./SiteChrome"
+import "./Create.css"
 
 const OCCASIONS = [
   "Wedding",
@@ -108,160 +110,115 @@ export default function Create() {
 
   const isValid = tier && eventName.trim() && occasion && eventDate && revealAt && heardFrom
 
-  const inputStyle = {
-    width: "100%",
-    padding: "12px 16px",
-    borderRadius: 6,
-    border: "1px solid rgba(245,239,230,0.15)",
-    background: "rgba(255,255,255,0.03)",
-    color: "#f5efe6",
-    fontSize: 15,
-    marginBottom: 16,
-    boxSizing: "border-box",
-    fontFamily: "'Inter', sans-serif",
-    colorScheme: "dark"
-  }
-
-  const labelStyle = {
-    color: "#a89070",
-    fontSize: 11,
-    letterSpacing: 2,
-    textTransform: "uppercase",
-    display: "block",
-    marginBottom: 8,
-    fontWeight: 300
-  }
+  const selected = TIERS.find(t => t.id === tier)
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#1a1410",
-      color: "#f5efe6",
-      fontFamily: "'Inter', sans-serif",
-      padding: 48,
-    }}>
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
-        <h1 style={{ letterSpacing: 4, fontSize: 18, fontWeight: 300, marginBottom: 48 }}>shoto</h1>
+    <div className="site">
+      <div className="site-grain" />
+      <div className="site-wrap">
+        <SiteNav hideCta />
+      </div>
 
-        <p style={{ color: "#c4a882", letterSpacing: 4, fontSize: 10, textTransform: "uppercase", marginBottom: 32, fontWeight: 300 }}>Create your event</p>
+      <main className="site-wrap cr-main">
+        <h1 className="site-title">Create your event</h1>
+        <p className="site-lead">Takes a couple of minutes. Your QR code arrives by email straight after payment.</p>
 
-        {/* Tier selection */}
-        <label style={labelStyle}>Package</label>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 32 }}>
+        <div className="cr-tiers" role="radiogroup" aria-label="Package">
           {TIERS.map(t => (
-            <div
+            <button
               key={t.id}
+              type="button"
+              role="radio"
+              aria-checked={tier === t.id}
+              className={`cr-tier ${tier === t.id ? "is-on" : ""}`}
               onClick={() => setTier(t.id)}
-              style={{
-                border: tier === t.id ? "1px solid rgba(245,239,230,0.4)" : "1px solid rgba(245,239,230,0.1)",
-                borderRadius: 6,
-                padding: "20px 16px",
-                textAlign: "center",
-                cursor: "pointer",
-                background: tier === t.id ? "rgba(245,239,230,0.05)" : "transparent"
-              }}
             >
-              <p style={{ color: "#c4a882", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>{t.name}</p>
-              <p style={{ fontSize: 20, fontFamily: "'Playfair Display', serif", fontStyle: "italic", marginBottom: 8 }}>{t.price}</p>
-              <p style={{ color: "#a89070", fontSize: 12, marginBottom: 4 }}>{t.guests}</p>
-              <p style={{ color: "#a89070", fontSize: 12 }}>{t.shots}</p>
-            </div>
+              <span className="cr-tier-name">{t.featured && <small>Most popular</small>}{t.name}</span>
+              <span className="cr-tier-meta">{t.guests}<br />{t.shots}</span>
+              <span className="cr-tier-price">{t.price}</span>
+            </button>
           ))}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-          <div>
-            <label style={labelStyle}>Event name</label>
+        <div className="site-form site-form--two">
+          <div className="site-field">
+            <label htmlFor="cr-name">Event name</label>
             <input
+              id="cr-name"
               type="text"
               placeholder="e.g. Sarah & Tom's Wedding"
               value={eventName}
               onChange={(e) => setEventName(e.target.value)}
-              style={inputStyle}
             />
+          </div>
 
-            <label style={labelStyle}>Occasion</label>
-            <select
-              value={occasion}
-              onChange={(e) => setOccasion(e.target.value)}
-              style={{ ...inputStyle, cursor: "pointer" }}
-            >
-              <option value="" style={{ background: "#1a1410" }}>Select occasion</option>
+          <div className="site-field">
+            <label htmlFor="cr-occasion">Occasion</label>
+            <select id="cr-occasion" value={occasion} onChange={(e) => setOccasion(e.target.value)}>
+              <option value="">Select occasion</option>
               {OCCASIONS.map(o => (
-                <option key={o} value={o} style={{ background: "#1a1410" }}>{o}</option>
+                <option key={o} value={o}>{o}</option>
               ))}
             </select>
           </div>
 
-          <div>
-            <label style={labelStyle}>Event date</label>
+          <div className="site-field">
+            <label htmlFor="cr-date">Event date</label>
             <input
+              id="cr-date"
               type="date"
               value={eventDate}
               onChange={(e) => handleDateChange(e.target.value)}
-              style={inputStyle}
             />
+          </div>
 
-            <label style={labelStyle}>Gallery reveal time</label>
+          <div className="site-field">
+            <label htmlFor="cr-reveal">Gallery reveal time</label>
             <input
+              id="cr-reveal"
               type="datetime-local"
               value={revealAt}
               onChange={(e) => setRevealAt(e.target.value)}
-              style={inputStyle}
             />
-            <p style={{ color: "#a89070", fontSize: 11, marginTop: -8, marginBottom: 24, letterSpacing: 0.5 }}>
-              Default is 10am the morning after your event. You can change this.
-            </p>
+            <small>Default is 10am the morning after your event. You can change this.</small>
+          </div>
 
-            <label style={labelStyle}>How did you hear about us?</label>
-            <select
-              value={heardFrom}
-              onChange={(e) => setHeardFrom(e.target.value)}
-              style={{ ...inputStyle, cursor: "pointer" }}
-            >
-              <option value="" style={{ background: "#1a1410" }}>Select one</option>
+          <div className="site-field site-field--full">
+            <label htmlFor="cr-heard">How did you hear about us?</label>
+            <select id="cr-heard" value={heardFrom} onChange={(e) => setHeardFrom(e.target.value)}>
+              <option value="">Select one</option>
               {HEARD_FROM.map(h => (
-                <option key={h} value={h} style={{ background: "#1a1410" }}>{h}</option>
+                <option key={h} value={h}>{h}</option>
               ))}
             </select>
             {heardFrom === "Other" && (
               <input
                 type="text"
+                aria-label="Where did you hear about us?"
                 placeholder="Tell us where"
                 maxLength={100}
                 value={heardFromOther}
                 onChange={(e) => setHeardFromOther(e.target.value)}
-                style={inputStyle}
               />
             )}
           </div>
+
+          <div className="site-field--full">
+            <button
+              className="site-btn site-btn--block"
+              onClick={handleCheckout}
+              disabled={!isValid || loading}
+            >
+              {loading ? "Redirecting to payment..." : `Pay ${selected?.price}`}
+            </button>
+            <p className="cr-note">
+              Secure payment via Stripe. By purchasing you agree to our <a href="/privacy">Privacy Policy</a>.
+            </p>
+          </div>
         </div>
+      </main>
 
-        <button
-          onClick={handleCheckout}
-          disabled={!isValid || loading}
-          style={{
-            width: "100%",
-            padding: "16px",
-            borderRadius: 4,
-            border: "none",
-            background: isValid ? "#f5efe6" : "#2a2420",
-            color: isValid ? "#1a1410" : "#4a3f35",
-            fontSize: 12,
-            fontWeight: 500,
-            letterSpacing: 3,
-            textTransform: "uppercase",
-            cursor: isValid ? "pointer" : "not-allowed",
-            marginTop: 8
-          }}
-        >
-          {loading ? "Redirecting to payment..." : `Pay ${TIERS.find(t => t.id === tier)?.price}`}
-        </button>
-
-        <p style={{ color: "#a89070", fontSize: 11, textAlign: "center", marginTop: 16 }}>
-          Secure payment via Stripe. By purchasing you agree to our <a href="/privacy" style={{ color: "#a89070" }}>Privacy Policy</a>.
-        </p>
-      </div>
+      <SiteFooter small />
     </div>
   )
 }

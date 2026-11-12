@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
+import { SiteNav, SiteFooter } from './SiteChrome'
 
 export default function PromiseFayres() {
   const [events, setEvents] = useState([])
@@ -20,47 +21,47 @@ export default function PromiseFayres() {
     setLoading(false)
   }
 
+  const formatDate = (d) => new Date(d).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+
   return (
-    <div style={{ minHeight: '100vh', background: '#1a1410', color: '#f5efe6', fontFamily: 'sans-serif', padding: '64px 24px', maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
-      <h1 style={{ letterSpacing: 4, fontSize: 18, fontWeight: 300, marginBottom: 8 }}>shoto</h1>
-      <p style={{ color: '#c4a882', fontSize: 11, letterSpacing: 4, textTransform: 'uppercase', marginBottom: 8, fontWeight: 300 }}>Promise Wedding Fayres</p>
-      <p style={{ color: '#a89070', fontSize: 13, marginBottom: 64, fontWeight: 300 }}>Select your event below to get started</p>
-      {loading ? (
-        <p style={{ color: '#a89070' }}>Loading events...</p>
-      ) : events.length === 0 ? (
-        <p style={{ color: '#a89070' }}>No active events right now.</p>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {events.map(event => {
-            const isPast = new Date(event.expires_at) < new Date()
-            if (isPast) return null
-            if (event.is_active) {
+    <div className="site">
+      <div className="site-grain" />
+      <div className="site-wrap">
+        <SiteNav hideCta />
+      </div>
+      <main className="site-wrap site-wrap--narrow site-section--tight">
+        <h1 className="site-title">Promise Wedding Fayres</h1>
+        <p className="site-lead">Select your event below to get started.</p>
+        {loading ? (
+          <p className="site-lead">Loading events...</p>
+        ) : events.length === 0 ? (
+          <p className="site-lead">No active events right now.</p>
+        ) : (
+          <div className="pr-list">
+            {events.map(event => {
+              const isPast = new Date(event.expires_at) < new Date()
+              if (isPast) return null
+              if (event.is_active) {
+                return (
+                  <a key={event.id} className="pr-event" href={'/camera?event=' + event.id}>
+                    <span className="pr-name">{event.name}</span>
+                    {event.fayre_date && <span className="pr-date">{formatDate(event.fayre_date)}</span>}
+                    <span className="pr-go">Open camera →</span>
+                  </a>
+                )
+              }
               return (
-                <a key={event.id} href={'/camera?event=' + event.id} style={{ display: 'block', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(245,239,230,0.15)', borderRadius: 8, padding: '24px 32px', textDecoration: 'none', color: '#f5efe6' }}>
-                  <p style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 20, marginBottom: 8 }}>{event.name}</p>
-                  {event.fayre_date && (
-                    <p style={{ color: '#a89070', fontSize: 13, fontWeight: 300 }}>
-                      {new Date(event.fayre_date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                    </p>
-                  )}
-                </a>
+                <div key={event.id} className="pr-event is-off">
+                  <span className="pr-name">{event.name}</span>
+                  {event.fayre_date && <span className="pr-date">{formatDate(event.fayre_date)}</span>}
+                  <span className="pr-go">Coming soon</span>
+                </div>
               )
-            }
-            return (
-              <div key={event.id} style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(245,239,230,0.04)', borderRadius: 8, padding: '24px 32px', opacity: 0.4, cursor: 'default' }}>
-                <p style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 20, marginBottom: 8, color: '#a89070' }}>{event.name}</p>
-                {event.fayre_date && (
-                  <p style={{ color: '#a89070', fontSize: 13, fontWeight: 300 }}>
-                    {new Date(event.fayre_date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                  </p>
-                )}
-                <p style={{ color: '#4a3f35', fontSize: 11, marginTop: 8 }}>Coming soon</p>
-              </div>
-            )
-          })}
-        </div>
-      )}
-      <p style={{ color: '#4a3f35', fontSize: 11, marginTop: 64, letterSpacing: 1 }}>Powered by shoto.co.uk</p>
+            })}
+          </div>
+        )}
+      </main>
+      <SiteFooter small />
     </div>
   )
 }

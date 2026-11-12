@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { supabase } from "./lib/supabase"
+import { SiteNav, SiteFooter } from "./SiteChrome"
 
 export default function Success() {
   const [event, setEvent] = useState(null)
@@ -48,96 +49,49 @@ export default function Success() {
 
   if (loading) {
     return (
-      <div style={centreStyle}>
-        <h1 style={logoStyle}>shoto</h1>
-        <p style={mutedStyle}>Setting up your event...</p>
-      </div>
+      <SuccessShell>
+        <p className="site-lead">Setting up your event...</p>
+      </SuccessShell>
     )
   }
 
   if (!event) {
     return (
-      <div style={centreStyle}>
-        <h1 style={logoStyle}>shoto</h1>
-        <p style={{ ...mutedStyle, marginBottom: 8 }}>Your payment was successful.</p>
-        <p style={mutedStyle}>Check your email for your event details.</p>
-      </div>
+      <SuccessShell>
+        <h1 className="site-title">Payment received.</h1>
+        <p className="site-lead">Check your email for your event details.</p>
+      </SuccessShell>
     )
   }
 
   return (
-    <div style={{ ...centreStyle, justifyContent: "flex-start", paddingTop: 64 }}>
-      <h1 style={logoStyle}>shoto</h1>
-
-      <p style={{ color: "#c4a882", letterSpacing: 4, fontSize: 10, textTransform: "uppercase", marginBottom: 16, fontWeight: 300 }}>You're all set</p>
-      <h2 style={{
-        fontFamily: "'Playfair Display', serif",
-        fontStyle: "italic",
-        fontWeight: 400,
-        fontSize: 28,
-        marginBottom: 40,
-        textAlign: "center"
-      }}>{event.name}</h2>
-
-      <div style={{
-        background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(245,239,230,0.08)",
-        borderRadius: 8,
-        padding: "32px 40px",
-        textAlign: "center",
-        marginBottom: 40,
-        maxWidth: 420,
-        width: "100%"
-      }}>
-        <p style={{ color: "#c4a882", fontSize: 11, letterSpacing: 4, textTransform: "uppercase", marginBottom: 16, fontWeight: 300 }}>Check your email</p>
-        <p style={{ color: "#a89070", fontSize: 14, lineHeight: 1.8, marginBottom: 0, fontWeight: 300 }}>
-          Your QR code has been sent to your email as an attachment. Print it and display it at your event so guests can scan it on the day.
-        </p>
+    <SuccessShell>
+      <h1 className="site-title">You're all set.</h1>
+      <p className="sc-event">{event.name}</p>
+      <div className="site-steps sc-steps">
+        <div className="site-step">
+          <h3>Check your email</h3>
+          <p>Your QR code has been sent to your email as an attachment. Print it and display it at your event so guests can scan it on the day.</p>
+        </div>
+        <div className="site-step">
+          <h3>Your gallery reveal</h3>
+          <p>After your event, you'll receive a second email with your private gallery link. Your photos will be waiting.</p>
+        </div>
       </div>
-
-      <div style={{
-        background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(245,239,230,0.08)",
-        borderRadius: 8,
-        padding: "32px 40px",
-        textAlign: "center",
-        marginBottom: 40,
-        maxWidth: 420,
-        width: "100%"
-      }}>
-        <p style={{ color: "#c4a882", fontSize: 11, letterSpacing: 4, textTransform: "uppercase", marginBottom: 16, fontWeight: 300 }}>Your gallery reveal</p>
-        <p style={{ color: "#a89070", fontSize: 14, lineHeight: 1.8, fontWeight: 300 }}>
-          After your event, you'll receive a second email with your private gallery link. Your photos will be waiting.
-        </p>
-      </div>
-
-      <p style={{ color: "#a89070", fontSize: 13, fontStyle: "italic", marginTop: 8 }}>Enjoy every moment, Shoto</p>
-    </div>
+      <p className="sc-signoff">Enjoy every moment, Shoto</p>
+    </SuccessShell>
   )
 }
 
-const centreStyle = {
-  minHeight: "100vh",
-  background: "#1a1410",
-  color: "#f5efe6",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  fontFamily: "'Inter', sans-serif",
-  padding: 24,
-  textAlign: "center"
-}
-
-const logoStyle = {
-  letterSpacing: 4,
-  fontSize: 18,
-  fontWeight: 300,
-  marginBottom: 32
-}
-
-const mutedStyle = {
-  color: "#a89070",
-  fontSize: 14,
-  fontWeight: 300
+function SuccessShell({ children }) {
+  return (
+    <div className="site">
+      <div className="site-grain" />
+      <div className="site-wrap">
+        <SiteNav hideCta />
+      </div>
+      <main className="site-wrap site-section--tight sc-main">{children}</main>
+      <SiteFooter small />
+    </div>
+  )
 }

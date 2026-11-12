@@ -1,0 +1,43 @@
+/* Shoto Events page. Shared look lives in site.css. */
+
+.ev-hero { display: grid; grid-template-columns: 7fr 5fr; gap: 56px; align-items: center; padding: 48px 0 96px; }
+.ev-hero p { color: var(--muted); font-size: 19px; max-width: 36ch; margin: 0 0 36px; }
+.ev-hero figure { margin: 0; aspect-ratio: 4 / 5; border-radius: 4px; overflow: hidden; position: relative; }
+.ev-hero figure img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ev-live {
+  position: absolute; left: 16px; bottom: 16px;
+  font-family: var(--mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--stamp); background: rgba(23, 18, 14, 0.85); padding: 7px 12px; border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(255, 149, 72, 0.35);
+}
+@media (max-width: 860px) {
+  .ev-hero { grid-template-columns: 1fr; padding-top: 16px; gap: 32px; }
+  .ev-hero figure { aspect-ratio: 4 / 3; }
+}
+
+/* Who it's for: two by two, split by hairlines */
+.ev-audience { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); }
+.ev-audience > div { padding: 36px 40px 40px 0; border-bottom: 1px solid var(--line); }
+.ev-audience > div:nth-child(even) { padding-left: 40px; padding-right: 0; border-left: 1px solid var(--line); }
+.ev-audience h3 { font-family: var(--display); font-style: italic; font-weight: 400; font-size: 30px; line-height: 1.15; margin: 0 0 12px; }
+.ev-audience p { color: var(--muted); margin: 0; max-width: 44ch; }
+@media (max-width: 760px) {
+  .ev-audience { grid-template-columns: 1fr; }
+  .ev-audience > div, .ev-audience > div:nth-child(even) { padding: 28px 0; border-left: 0; }
+}
+
+/* What you get: two columns */
+.ev-features { list-style: none; padding: 0; margin: 0; columns: 2; column-gap: 64px; }
+.ev-features li { break-inside: avoid; padding: 0 0 18px 28px; position: relative; color: var(--cream); }
+.ev-features li::before { content: "+"; position: absolute; left: 0; top: 0; color: var(--stamp); font-weight: 600; }
+@media (max-width: 760px) { .ev-features { columns: 1; } }
+
+/* Proof */
+.ev-proof { text-align: center; }
+.ev-proof blockquote { margin: 0 auto 20px; font-family: var(--display); font-style: italic; font-size: clamp(28px, 3.4vw, 44px); line-height: 1.3; max-width: 24ch; }
+.ev-proof cite { font-style: normal; color: var(--muted); }
+
+/* Enquiry: heading left, form right */
+.ev-enquire { display: grid; grid-template-columns: 5fr 7fr; gap: 64px; align-items: start; }
+.ev-enquire .site-lead { margin-bottom: 0; }
+@media (max-width: 860px) { .ev-enquire { grid-template-columns: 1fr; gap: 32px; } }
